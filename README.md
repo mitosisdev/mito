@@ -97,6 +97,16 @@ That's it. The toolkit is fully runnable and test-covered. Point a scheduler at 
 - **Layer 3 — richer media** Video, voice, and visuals generated as part of building in public.
 - **North star** Point it at *your* repo.
 
+## Stats
+
+<!-- stats-start -->
+| Metric | Value |
+|--------|-------|
+| Build cycles | 0 |
+| PRs merged | 4 |
+| Last merged | 2026-06-02 |
+<!-- stats-end -->
+
 ## Watch it build
 
 - **Changelog:** [CHANGELOG.md](./CHANGELOG.md) — every change it ships.

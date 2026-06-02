@@ -51,4 +51,13 @@ saveState(cfg.statePath, state);
 // Refresh the status-site stats now that a PR has merged.
 await $`bun bin/update-stats.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();
 
+// Update README stats and commit to main.
+await $`bun bin/update-readme.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();
+const readmeDiff = await $`git diff --quiet README.md`.nothrow().quiet();
+if (readmeDiff.exitCode !== 0) {
+  await $`git add README.md`.nothrow().quiet();
+  await $`git commit -m "chore: update README stats [skip ci]"`.nothrow().quiet();
+  await $`git push`.nothrow().quiet();
+}
+
 console.log(JSON.stringify(outcome));
