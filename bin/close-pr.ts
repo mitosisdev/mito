@@ -4,7 +4,7 @@
 //
 // Usage: bun bin/close-pr.ts <number> "<reason>"
 import { loadConfig, requireGithub } from "../src/config";
-import { makeGithub } from "../src/github";
+import { makeGithub, nativeFetch } from "../src/github";
 import { loadState, saveState, markPrClosed } from "../src/state";
 
 const number = Number(process.argv[2]);
@@ -16,7 +16,7 @@ if (!Number.isInteger(number) || number <= 0 || !reason) {
 
 const cfg = loadConfig();
 const { repo, token } = requireGithub(cfg);
-const gh = makeGithub({ repo, token, fetch: globalThis.fetch as any });
+const gh = makeGithub({ repo, token, fetch: nativeFetch() });
 
 // Find the head ref so we can delete the branch after closing.
 const open = await gh.listOpenPullRequests();

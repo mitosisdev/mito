@@ -13,7 +13,7 @@
 import { $ } from "bun";
 import { loadConfig, requireGithub } from "../src/config";
 import { runTests, revertToLastKnownGood, branchDiff, branchNumstat } from "../src/git";
-import { makeGithub } from "../src/github";
+import { makeGithub, nativeFetch } from "../src/github";
 import { proposeChange } from "../src/propose";
 import { scanDiff } from "../src/secretscan";
 import { parseNumstat, checkDiffSize } from "../src/diffsize";
@@ -30,7 +30,7 @@ if (!branch || !title) {
 const dir = process.cwd();
 const cfg = loadConfig();
 const { repo, token } = requireGithub(cfg);
-const gh = makeGithub({ repo, token, fetch: globalThis.fetch as any });
+const gh = makeGithub({ repo, token, fetch: nativeFetch() });
 
 // Push using a per-invocation auth header so the token never lands in a remote
 // URL, the reflog, or stdout. `git -c` keeps it in process memory only.

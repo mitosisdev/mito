@@ -5,7 +5,7 @@
 // Usage: bun bin/merge-pr.ts <number>
 import { $ } from "bun";
 import { loadConfig, requireGithub } from "../src/config";
-import { makeGithub } from "../src/github";
+import { makeGithub, nativeFetch } from "../src/github";
 import { mergeIfGreen } from "../src/review";
 import { loadState, saveState, markPrMerged } from "../src/state";
 
@@ -17,7 +17,7 @@ if (!Number.isInteger(number) || number <= 0) {
 
 const cfg = loadConfig();
 const { repo, token } = requireGithub(cfg);
-const gh = makeGithub({ repo, token, fetch: globalThis.fetch as any });
+const gh = makeGithub({ repo, token, fetch: nativeFetch() });
 
 // Resolve the head ref for this PR (the reviewer passes only the number).
 const open = await gh.listOpenPullRequests();
