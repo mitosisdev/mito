@@ -36,6 +36,12 @@ export interface Github {
   deleteBranch(name: string): Promise<void>;
 }
 
+// Adapter so callers can pass globalThis.fetch without an `as any` cast.
+// The narrower FetchLike signature is a structural subset of the full Fetch API.
+export function nativeFetch(): FetchLike {
+  return globalThis.fetch as unknown as FetchLike;
+}
+
 export interface MakeGithubOpts { repo: string; token: string; fetch: FetchLike; }
 
 const API = "https://api.github.com";

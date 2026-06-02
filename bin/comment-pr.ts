@@ -5,7 +5,7 @@
 //
 // Usage: bun bin/comment-pr.ts <number> "<body>"
 import { loadConfig, requireGithub } from "../src/config";
-import { makeGithub } from "../src/github";
+import { makeGithub, nativeFetch } from "../src/github";
 
 const number = Number(process.argv[2]);
 const body = process.argv[3];
@@ -16,7 +16,7 @@ if (!Number.isInteger(number) || number <= 0 || !body) {
 
 const cfg = loadConfig();
 const { repo, token } = requireGithub(cfg);
-const gh = makeGithub({ repo, token, fetch: globalThis.fetch as any });
+const gh = makeGithub({ repo, token, fetch: nativeFetch() });
 
 await gh.addComment(number, body);
 

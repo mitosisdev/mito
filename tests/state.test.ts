@@ -27,13 +27,15 @@ test("recordProposedPr tracks an open PR; markPrMerged/markPrClosed update statu
 
   s = recordProposedPr(s, { number: 8, branch: "mito/8", url: "u8", title: "add bar" });
   s = markPrClosed(s, 8, "out of scope");
-  const pr8 = s.pullRequests.find((p) => p.number === 8)!;
-  expect(pr8.status).toBe("closed");
-  expect(pr8.closeReason).toBe("out of scope");
+  const pr8 = s.pullRequests.find((p) => p.number === 8);
+  expect(pr8).toBeDefined();
+  expect(pr8?.status).toBe("closed");
+  expect(pr8?.closeReason).toBe("out of scope");
 });
 
 test("loadState backfills an empty pullRequests array for older state files", () => {
   const p = tmpPath();
+  // biome-ignore lint/suspicious/noExplicitAny: intentionally simulates a pre-v2 state file missing pullRequests
   saveState(p, { cycles: [], backlog: [], lastKnownGood: null } as any);
   const loaded = loadState(p);
   expect(Array.isArray(loaded.pullRequests)).toBe(true);
