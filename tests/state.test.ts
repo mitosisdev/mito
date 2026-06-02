@@ -3,7 +3,7 @@ import { test, expect } from "bun:test";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { rmSync } from "node:fs";
-import { loadState, saveState, addCycle, emptyState, recordProposedPr, markPrMerged, markPrClosed } from "../src/state";
+import { loadState, saveState, addCycle, emptyState, recordProposedPr, markPrMerged, markPrClosed, addRejectedIdea, wasRejected } from "../src/state";
 
 function tmpPath() { return join(tmpdir(), `mito-state-${Math.floor(performance.now())}-${process.pid}.json`); }
 
@@ -39,6 +39,38 @@ test("loadState backfills an empty pullRequests array for older state files", ()
   saveState(p, { cycles: [], backlog: [], lastKnownGood: null } as any);
   const loaded = loadState(p);
   expect(Array.isArray(loaded.pullRequests)).toBe(true);
+  rmSync(p, { force: true });
+});
+
+test("loadState backfills empty rejectedIdeas for older state files", () => {
+  const p = tmpPath();
+  // biome-ignore lint/suspicious/noExplicitAny: simulates pre-rejectedIdeas state file
+  saveState(p, { cycles: [], backlog: [], lastKnownGood: null, pullRequests: [] } as any);
+  const loaded = loadState(p);
+  expect(Array.isArray(loaded.rejectedIdeas)).toBe(true);
+  expect(loaded.rejectedIdeas).toHaveLength(0);
+  rmSync(p, { force: true });
+});
+
+test("addRejectedIdea records title and reason; wasRejected finds exact match", () => {
+  let s = emptyState();
+  expect(wasRejected(s, "add foo")).toBe(false);
+  s = addRejectedIdea(s, "add foo", "out of scope for now");
+  expect(wasRejected(s, "add foo")).toBe(true);
+  expect(wasRejected(s, "add bar")).toBe(false);
+  expect(s.rejectedIdeas[0]?.title).toBe("add foo");
+  expect(s.rejectedIdeas[0]?.reason).toBe("out of scope for now");
+  expect(typeof s.rejectedIdeas[0]?.closedAt).toBe("string");
+});
+
+test("rejectedIdeas round-trips through saveState/loadState", () => {
+  const p = tmpPath();
+  let s = emptyState();
+  s = addRejectedIdea(s, "bad idea", "not aligned with goals");
+  saveState(p, s);
+  const loaded = loadState(p);
+  expect(loaded.rejectedIdeas).toHaveLength(1);
+  expect(loaded.rejectedIdeas[0]?.title).toBe("bad idea");
   rmSync(p, { force: true });
 });
 
