@@ -26,31 +26,75 @@ export async function tagLastKnownGood(dir: string, commit: string): Promise<voi
   await $`git -C ${dir} tag -f ${LKG_TAG} ${commit}`;
 }
 
-// Restore the working tree + HEAD to the last-known-good tag.
-// Branch-name agnostic: resolves whatever branch the LKG tag sits on (main,
-// master, or any default) and hard-resets it to the tag. This satisfies the
-// contract (good tree restored) without assuming a `main` branch exists.
+// Return the short name of the branch HEAD currently points at, or "" when
+// HEAD is detached (rev-parse prints "HEAD" in that case).
+async function currentBranch(dir: string): Promise<string> {
+  const name = (
+    await $`git -C ${dir} rev-parse --abbrev-ref HEAD`.nothrow().text()
+  ).trim();
+  return name === "HEAD" ? "" : name;
+}
+
+// Resolve the default branch to land on, branch-name agnostic. Prefers main,
+// then master, then whatever branch HEAD is currently on (e.g. a repo whose
+// default is neither main nor master). Returns "" if none can be determined.
+async function defaultBranch(dir: string, current: string): Promise<string> {
+  const exists = async (ref: string): Promise<boolean> =>
+    (
+      await $`git -C ${dir} rev-parse -q --verify ${`refs/heads/${ref}`}`
+        .nothrow()
+        .quiet()
+    ).exitCode === 0;
+
+  if (await exists("main")) return "main";
+  if (await exists("master")) return "master";
+  return current;
+}
+
+// Restore the working tree + HEAD to a known-good state, then clean up the
+// abandoned cycle branch.
+//
+// This MUST be robust on the very first cycle, before bin/verify.ts has ever
+// created the mito-last-known-good tag. The can't-brick-itself guarantee means
+// a failed change always returns the tree to the committed default-branch state.
+//
+//   - Tag present:  checkout default branch, then `reset --hard <tag>`.
+//   - Tag ABSENT:   checkout default branch, `reset --hard HEAD`, then
+//                   `git clean -fd` so the tree returns to the committed
+//                   default-branch state regardless.
+//
+// Branch-name agnostic throughout (this repo defaults to `master`). The
+// abandoned `mito/<n>` branch we started on is deleted after we land safely
+// on the default branch, guarded so it never errors if already gone.
 export async function revertToLastKnownGood(dir: string): Promise<void> {
-  // Find which branch (if any) points at the LKG commit so we land on it
-  // rather than leaving a detached HEAD or stranded cycle branch.
-  const branchFormat = "--format=%(refname:short)";
-  const branches = (
-    await $`git -C ${dir} branch ${branchFormat} --contains ${LKG_TAG}`
-      .nothrow()
-      .text()
-  )
-    .split("\n")
-    .map((b) => b.trim())
-    .filter((b) => b.length > 0 && !b.startsWith("("));
+  // Capture the branch we're abandoning before we move off it.
+  const abandoned = await currentBranch(dir);
 
-  const target = branches.includes("main")
-    ? "main"
-    : branches.includes("master")
-      ? "master"
-      : branches[0];
+  const tagExists =
+    (
+      await $`git -C ${dir} rev-parse -q --verify ${`refs/tags/${LKG_TAG}`}`
+        .nothrow()
+        .quiet()
+    ).exitCode === 0;
 
+  const target = await defaultBranch(dir, abandoned);
   if (target) {
     await $`git -C ${dir} checkout -q ${target}`;
   }
-  await $`git -C ${dir} reset -q --hard ${LKG_TAG}`;
+
+  if (tagExists) {
+    await $`git -C ${dir} reset -q --hard ${LKG_TAG}`;
+  } else {
+    // First-cycle fallback: no tag yet. Reset to the committed default-branch
+    // HEAD and scrub any untracked debris so the tree is clean.
+    await $`git -C ${dir} reset -q --hard HEAD`;
+    await $`git -C ${dir} clean -fdq`.nothrow();
+  }
+
+  // Delete the abandoned cycle branch now that we've landed elsewhere.
+  // Guarded: -D is force-delete, and we only attempt it if we actually moved
+  // off it onto a different branch. .nothrow() keeps it safe if it's gone.
+  if (abandoned && abandoned !== target) {
+    await $`git -C ${dir} branch -D ${abandoned}`.nothrow().quiet();
+  }
 }
