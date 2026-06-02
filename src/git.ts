@@ -22,6 +22,19 @@ export async function runTests(dir: string): Promise<boolean> {
   return res.exitCode === 0;
 }
 
+// The unified diff of the current branch vs `base` (default "main"), used by
+// the secret scanner before a PR is opened. `base...HEAD` is the three-dot
+// range: changes on HEAD since it diverged from base.
+export async function branchDiff(dir: string, base = "main"): Promise<string> {
+  return await $`git -C ${dir} diff ${`${base}...HEAD`}`.nothrow().text();
+}
+
+// `git diff --numstat base...HEAD` — machine-readable per-file added/deleted
+// counts, fed to the diff-size guard. Returns "" when there is no diff.
+export async function branchNumstat(dir: string, base = "main"): Promise<string> {
+  return await $`git -C ${dir} diff --numstat ${`${base}...HEAD`}`.nothrow().text();
+}
+
 export async function tagLastKnownGood(dir: string, commit: string): Promise<void> {
   await $`git -C ${dir} tag -f ${LKG_TAG} ${commit}`;
 }

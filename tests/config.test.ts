@@ -35,3 +35,22 @@ test("parseConfig leaves github fields undefined when absent (X-only flow still 
   expect(cfg.github.repo).toBeUndefined();
   expect(cfg.github.token).toBeUndefined();
 });
+
+test("parseConfig defaults the PR-size caps to 12 files / 600 lines", () => {
+  const cfg = parseConfig({
+    X_API_KEY: "k", X_API_SECRET: "s",
+    X_ACCESS_TOKEN: "t", X_ACCESS_SECRET: "ts",
+  });
+  expect(cfg.maxPrFiles).toBe(12);
+  expect(cfg.maxPrLines).toBe(600);
+});
+
+test("parseConfig reads the PR-size caps from env when set", () => {
+  const cfg = parseConfig({
+    X_API_KEY: "k", X_API_SECRET: "s",
+    X_ACCESS_TOKEN: "t", X_ACCESS_SECRET: "ts",
+    MITO_MAX_PR_FILES: "5", MITO_MAX_PR_LINES: "120",
+  });
+  expect(cfg.maxPrFiles).toBe(5);
+  expect(cfg.maxPrLines).toBe(120);
+});

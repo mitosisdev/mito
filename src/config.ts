@@ -1,5 +1,6 @@
 // src/config.ts
 import { z } from "zod";
+import { DEFAULT_MAX_FILES, DEFAULT_MAX_LINES } from "./diffsize";
 
 const Schema = z.object({
   X_API_KEY: z.string().min(1),
@@ -13,6 +14,9 @@ const Schema = z.object({
   // requireGithub() below asserts both at the point of use (propose/review).
   MITO_GITHUB_REPO: z.string().min(1).optional(),
   GITHUB_TOKEN: z.string().min(1).optional(),
+  // Diff-size guard — caps the blast radius of a single autonomous change.
+  MITO_MAX_PR_FILES: z.coerce.number().int().positive().default(DEFAULT_MAX_FILES),
+  MITO_MAX_PR_LINES: z.coerce.number().int().positive().default(DEFAULT_MAX_LINES),
 });
 
 export interface Config {
@@ -21,6 +25,8 @@ export interface Config {
   statePath: string;
   killswitchPath: string;
   spendCapUsd: number;
+  maxPrFiles: number;
+  maxPrLines: number;
 }
 
 export function parseConfig(env: Record<string, string | undefined>): Config {
@@ -31,6 +37,8 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
     statePath: e.MITO_STATE_PATH,
     killswitchPath: e.MITO_KILLSWITCH_PATH,
     spendCapUsd: e.MITO_SPEND_CAP_USD,
+    maxPrFiles: e.MITO_MAX_PR_FILES,
+    maxPrLines: e.MITO_MAX_PR_LINES,
   };
 }
 
