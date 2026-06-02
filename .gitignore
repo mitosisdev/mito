@@ -3,4 +3,5 @@ node_modules/
 *.log
 mito-state.json
 STOP
+.mito-logs/
 docs/superpowers/
