@@ -1,0 +1,16 @@
+{
+  "name": "mito",
+  "version": "0.0.0",
+  "type": "module",
+  "private": false,
+  "scripts": {
+    "test": "bun test",
+    "preflight": "bun bin/preflight.ts",
+    "verify": "bun bin/verify.ts",
+    "publish": "bun bin/publish.ts"
+  },
+  "dependencies": {
+    "twitter-api-v2": "^1.18.0",
+    "zod": "^3.23.8"
+  }
+}
