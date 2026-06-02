@@ -3,6 +3,7 @@
 // (and merges nothing) if CI is not success.
 //
 // Usage: bun bin/merge-pr.ts <number>
+import { $ } from "bun";
 import { loadConfig, requireGithub } from "../src/config";
 import { makeGithub } from "../src/github";
 import { mergeIfGreen } from "../src/review";
@@ -46,4 +47,8 @@ if (!outcome.merged) {
 let state = loadState(cfg.statePath);
 state = markPrMerged(state, number, outcome.sha);
 saveState(cfg.statePath, state);
+
+// Refresh the status-site stats now that a PR has merged.
+await $`bun bin/update-stats.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();
+
 console.log(JSON.stringify(outcome));
