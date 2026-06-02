@@ -5,7 +5,7 @@
 // Usage: bun bin/close-pr.ts <number> "<reason>"
 import { loadConfig, requireGithub } from "../src/config";
 import { makeGithub, nativeFetch } from "../src/github";
-import { loadState, saveState, markPrClosed } from "../src/state";
+import { loadState, saveState, markPrClosed, addRejectedIdea } from "../src/state";
 
 const number = Number(process.argv[2]);
 const reason = process.argv[3];
@@ -28,6 +28,9 @@ if (pr) await gh.deleteBranch(pr.head);
 
 let state = loadState(cfg.statePath);
 state = markPrClosed(state, number, reason);
+// Record the rejected idea so future build sessions can skip re-proposals.
+const closedPr = state.pullRequests.find((p) => p.number === number);
+if (closedPr) state = addRejectedIdea(state, closedPr.title, reason);
 saveState(cfg.statePath, state);
 
 console.log(JSON.stringify({ closed: true, number, reason }));

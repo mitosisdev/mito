@@ -13,6 +13,12 @@ export interface CycleRecord {
 }
 export interface BacklogItem { id: number; idea: string; status: "pending" | "done" | "dropped"; }
 
+export interface RejectedIdea {
+  title: string;
+  reason: string;
+  closedAt: string;
+}
+
 export interface PullRequestRecord {
   number: number;
   branch: string;
@@ -30,15 +36,16 @@ export interface State {
   backlog: BacklogItem[];
   lastKnownGood: string | null;
   pullRequests: PullRequestRecord[];
+  rejectedIdeas: RejectedIdea[];
 }
 
-export function emptyState(): State { return { cycles: [], backlog: [], lastKnownGood: null, pullRequests: [] }; }
+export function emptyState(): State { return { cycles: [], backlog: [], lastKnownGood: null, pullRequests: [], rejectedIdeas: [] }; }
 
 export function loadState(path: string): State {
   if (!existsSync(path)) return emptyState();
   const raw = JSON.parse(readFileSync(path, "utf8")) as Partial<State>;
   // Backfill fields older state files predate, so callers always get arrays.
-  return { ...emptyState(), ...raw, pullRequests: raw.pullRequests ?? [] };
+  return { ...emptyState(), ...raw, pullRequests: raw.pullRequests ?? [], rejectedIdeas: raw.rejectedIdeas ?? [] };
 }
 
 export function saveState(path: string, state: State): void {
@@ -85,4 +92,13 @@ export function markPrMerged(state: State, number: number, mergeSha?: string): S
 
 export function markPrClosed(state: State, number: number, reason?: string): State {
   return updatePr(state, number, { status: "closed", closeReason: reason, resolvedAt: new Date().toISOString() });
+}
+
+export function addRejectedIdea(state: State, title: string, reason: string): State {
+  const entry: RejectedIdea = { title, reason, closedAt: new Date().toISOString() };
+  return { ...state, rejectedIdeas: [...state.rejectedIdeas, entry] };
+}
+
+export function wasRejected(state: State, title: string): boolean {
+  return state.rejectedIdeas.some((r) => r.title === title);
 }
