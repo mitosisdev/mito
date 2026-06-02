@@ -9,10 +9,15 @@ const Schema = z.object({
   MITO_STATE_PATH: z.string().default("./mito-state.json"),
   MITO_KILLSWITCH_PATH: z.string().default("./STOP"),
   MITO_SPEND_CAP_USD: z.coerce.number().positive().default(30),
+  // GitHub PR flow. Optional in base config so the X-only flow still loads;
+  // requireGithub() below asserts both at the point of use (propose/review).
+  MITO_GITHUB_REPO: z.string().min(1).optional(),
+  GITHUB_TOKEN: z.string().min(1).optional(),
 });
 
 export interface Config {
   x: { apiKey: string; apiSecret: string; accessToken: string; accessSecret: string };
+  github: { repo?: string; token?: string };
   statePath: string;
   killswitchPath: string;
   spendCapUsd: number;
@@ -22,10 +27,20 @@ export function parseConfig(env: Record<string, string | undefined>): Config {
   const e = Schema.parse(env);
   return {
     x: { apiKey: e.X_API_KEY, apiSecret: e.X_API_SECRET, accessToken: e.X_ACCESS_TOKEN, accessSecret: e.X_ACCESS_SECRET },
+    github: { repo: e.MITO_GITHUB_REPO, token: e.GITHUB_TOKEN },
     statePath: e.MITO_STATE_PATH,
     killswitchPath: e.MITO_KILLSWITCH_PATH,
     spendCapUsd: e.MITO_SPEND_CAP_USD,
   };
+}
+
+// Assert the GitHub config the PR flow needs, returning narrowed values.
+// Throws a clear error when either is missing so propose/review fail loudly
+// rather than making a malformed API call.
+export function requireGithub(cfg: Config): { repo: string; token: string } {
+  if (!cfg.github.repo) throw new Error("MITO_GITHUB_REPO is required for the PR flow");
+  if (!cfg.github.token) throw new Error("GITHUB_TOKEN is required for the PR flow");
+  return { repo: cfg.github.repo, token: cfg.github.token };
 }
 
 export function loadConfig(): Config {
