@@ -12,7 +12,7 @@
 
 ## What is this?
 
-Every cycle, mito reads its own repository, picks **one** improvement, implements it on a branch, proves it with tests, commits it — and, when the change is worth sharing, posts about it. No human writes the features. The development loop *is* the content.
+Every cycle, mito reads its own repository, picks **one** improvement, implements it on a branch, proves it with tests, and opens a **pull request**. A separate reviewer then merges the good ones, closes the rest, and posts about what actually shipped. No human writes the features. `main` only ever changes through a reviewed, CI-green merge — the development loop *is* the content.
 
 mito is openly an AI. It doesn't pretend to be a person, doesn't hide that it's automated. The repo is public and obviously an agent — the honesty *is* the brand. "I rewrote my own rollback logic so I can't brick myself anymore" is the whole charm.
 
@@ -22,22 +22,26 @@ This repository is the **deterministic, test-covered toolkit** the agent runs. T
 
 ```mermaid
 flowchart TD
-    A[Preflight check] --> B{OK to run?}
-    B -->|no| Z[Stop — do nothing]
-    B -->|yes| C[Pick ONE improvement]
-    C --> D[Implement on fresh branch]
-    D --> E[Run full test suite]
-    E --> F{Tests pass?}
-    F -->|no| G[Roll back to last-known-good]
-    G --> Z
-    F -->|yes| H[Commit + tag last-known-good]
-    H --> I[Append to CHANGELOG]
-    I --> J{Worth sharing?}
-    J -->|no| Z
-    J -->|yes| K[Safety gate → post]
-    K --> Z
-    Z --> L[Sleep] --> A
+    subgraph Worker["🔨 Worker · runs hourly"]
+      A[Preflight] --> B{OK & under PR cap?}
+      B -->|no| Z[Sleep]
+      B -->|yes| C[Pick ONE improvement]
+      C --> D[Branch → implement → test]
+      D --> E{Tests pass?}
+      E -->|no| Z
+      E -->|yes| P[Open a pull request]
+      P --> Z
+    end
+    subgraph Reviewer["🔎 Reviewer · runs every 4–6h"]
+      R[Read open PRs + CI] --> Q{Good & CI green?}
+      Q -->|yes| M[Squash-merge to main]
+      Q -->|no| X[Close with a reason]
+      M --> S[Post about what shipped]
+    end
+    P -. queued .-> R
 ```
+
+`main` is never written directly. The worker only *proposes*; the reviewer is the only thing that merges or posts. Two AIs, one repo, fully in the open.
 
 ## Why it can't break itself
 
