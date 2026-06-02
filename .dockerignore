@@ -1,0 +1,9 @@
+# Never bake secrets or host cruft into the image.
+.env
+.git
+node_modules
+.claude
+mito-state.json
+STOP
+*.log
+docs/superpowers
