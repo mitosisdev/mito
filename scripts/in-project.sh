@@ -34,7 +34,11 @@ REMOTE="https://github.com/$OWNER/$SLUG.git"
 mkdir -p "$WORKSPACE"
 
 if [ -d "$DIR/.git" ]; then
-  # Refresh an existing clone to a clean origin/main.
+  # Refresh an existing checkout to a clean origin/main. The dir may have been
+  # created by `git init`+push (new-project.ts) with NO 'origin' remote, so make
+  # sure origin exists and points at the right URL before fetching.
+  git -C "$DIR" remote get-url origin >/dev/null 2>&1 || git -C "$DIR" remote add origin "$REMOTE"
+  git -C "$DIR" remote set-url origin "$REMOTE"
   git -C "$DIR" fetch -q origin
   git -C "$DIR" reset -q --hard origin/main
   git -C "$DIR" clean -fdq
@@ -43,15 +47,15 @@ else
   git clone -q "$REMOTE" "$DIR"
 fi
 
-# Pass the home repo's GitHub token through so authenticated bins (propose.ts)
-# can push. Read it from the home .env without printing it.
+# Load the home repo's full config (GitHub token, spend cap, X placeholders) so
+# the bins' config validation passes inside the project checkout, then point the
+# repo at THIS project.
 if [ -f "$HOME_REPO/.env" ]; then
-  TOKEN_LINE="$(grep -E '^GITHUB_TOKEN=' "$HOME_REPO/.env" | tail -n1 || true)"
-  if [ -n "$TOKEN_LINE" ]; then
-    export GITHUB_TOKEN="${TOKEN_LINE#GITHUB_TOKEN=}"
-  fi
+  set -a
+  # shellcheck disable=SC1091
+  . "$HOME_REPO/.env"
+  set +a
 fi
-
 export MITO_GITHUB_REPO="$OWNER/$SLUG"
 
 cd "$DIR"
