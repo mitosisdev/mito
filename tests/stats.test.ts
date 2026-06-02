@@ -22,9 +22,13 @@ test("daysAlive is 0 when now === repoCreated", () => {
   expect(s.daysAlive).toBe(0);
 });
 
-test("counts open + merged + closed as cyclesRun, only merged as prsMerged", () => {
+test("cyclesRun counts build sessions, not PRs; prsMerged counts only merged PRs", () => {
   const state: State = {
     ...emptyState(),
+    cycles: [
+      { id: 1, timestamp: "t", action: "built feature A", branch: "mito/1", testsPassed: true, committed: true, posted: false },
+      { id: 2, timestamp: "t", action: "built feature B", branch: "mito/2", testsPassed: true, committed: true, posted: false },
+    ],
     pullRequests: [
       { number: 1, branch: "mito/1", url: "u", title: "first", status: "merged", proposedAt: "t", resolvedAt: "2026-06-02T10:00:00Z", mergeSha: "abc" },
       { number: 2, branch: "mito/2", url: "u", title: "second", status: "closed", proposedAt: "t", resolvedAt: "2026-06-03T10:00:00Z", closeReason: "bad" },
@@ -32,8 +36,19 @@ test("counts open + merged + closed as cyclesRun, only merged as prsMerged", () 
     ],
   };
   const s = computeStats(state, now, base);
-  expect(s.cyclesRun).toBe(3);
+  expect(s.cyclesRun).toBe(2); // 2 build sessions, not 3 PRs
   expect(s.prsMerged).toBe(1);
+});
+
+test("cyclesRun is 0 when no build sessions have run even if PRs exist", () => {
+  const state: State = {
+    ...emptyState(),
+    pullRequests: [
+      { number: 1, branch: "mito/1", url: "u", title: "pr without cycle", status: "open", proposedAt: "t" },
+    ],
+  };
+  const s = computeStats(state, now, base);
+  expect(s.cyclesRun).toBe(0);
 });
 
 test("lastChange is the title of the most-recently-merged PR", () => {
