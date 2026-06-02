@@ -5,9 +5,13 @@
   "private": false,
   "scripts": {
     "test": "bun test",
+    "lint": "bunx biome check src/ bin/ tests/ projects/status-site/lib.ts projects/status-site/lib.test.ts",
     "preflight": "bun bin/preflight.ts",
     "verify": "bun bin/verify.ts",
     "publish": "bun bin/publish.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16"
   },
   "dependencies": {
     "twitter-api-v2": "^1.18.0",

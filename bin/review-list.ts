@@ -3,12 +3,12 @@
 //
 // Usage: bun bin/review-list.ts
 import { loadConfig, requireGithub } from "../src/config";
-import { makeGithub } from "../src/github";
+import { makeGithub, nativeFetch } from "../src/github";
 import { reviewList } from "../src/review";
 
 const cfg = loadConfig();
 const { repo, token } = requireGithub(cfg);
-const gh = makeGithub({ repo, token, fetch: globalThis.fetch as any });
+const gh = makeGithub({ repo, token, fetch: nativeFetch() });
 
 const items = await reviewList({
   listOpenPullRequests: () => gh.listOpenPullRequests(),
