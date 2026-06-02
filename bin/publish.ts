@@ -9,6 +9,16 @@ const text = process.argv[2];
 if (!text) { console.log(JSON.stringify({ posted: false, reason: "no_text" })); process.exit(1); }
 
 const cfg = loadConfig();
+
+// Skip gracefully when X isn't configured yet (placeholder/empty creds), so the
+// scheduled reviewer never crashes on a missing key. The dev loop runs without posting.
+const xConfigured = [cfg.x.apiKey, cfg.x.apiSecret, cfg.x.accessToken, cfg.x.accessSecret]
+  .every((v) => typeof v === "string" && v.trim() !== "" && v.trim().toLowerCase() !== "pending");
+if (!xConfigured) {
+  console.log(JSON.stringify({ posted: false, reason: "x_not_configured" }));
+  process.exit(0);
+}
+
 // Nominal placeholder for X pay-per-use; refine once the real pricing tier is known.
 const COST = 0.02;
 const state = loadState(cfg.statePath) as ReturnType<typeof loadState> & { ledger?: Ledger };
