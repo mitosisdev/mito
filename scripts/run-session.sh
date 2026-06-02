@@ -29,10 +29,11 @@ fi
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 name="$(basename "$PROMPT_FILE" .md)"
 
+# Prompt comes in on STDIN — the positional-arg form isn't picked up in --print mode.
 "$CLAUDE" -p \
   --permission-mode bypassPermissions \
   --allowed-tools "Bash,Edit,Write,Read,Glob,Grep,Task" \
   --model sonnet \
   --output-format text \
-  "$(cat "$PROMPT_FILE")" \
+  < "$PROMPT_FILE" \
   >> "$LOG_DIR/${name}-${stamp}.log" 2>&1
