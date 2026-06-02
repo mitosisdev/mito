@@ -9,6 +9,7 @@ const text = process.argv[2];
 if (!text) { console.log(JSON.stringify({ posted: false, reason: "no_text" })); process.exit(1); }
 
 const cfg = loadConfig();
+// Nominal placeholder for X pay-per-use; refine once the real pricing tier is known.
 const COST = 0.02;
 const state = loadState(cfg.statePath) as ReturnType<typeof loadState> & { ledger?: Ledger };
 const ledger: Ledger = state.ledger ?? { entries: [] };
