@@ -15,6 +15,15 @@ This repository contains **no secrets**. All credentials (X / Twitter API keys, 
 
 If you ever spot a committed secret, treat it as a vulnerability and report it immediately so it can be rotated.
 
+## Running untrusted self-modified code safely
+
+mito edits and runs its own code unattended, so that code is treated as **untrusted**. Defenses:
+
+- **Sandbox** — the cycle runs in an ephemeral container that mounts only this repo and receives only a narrowly-scoped GitHub token; the host, other projects, and other secrets are unreachable. See [`docs/sandbox.md`](./docs/sandbox.md).
+- **Secret-scanner** — every code diff is scanned before a PR opens; a diff containing a key never becomes a public commit.
+- **Diff-size guard** — a single change is capped in files/lines, bounding the blast radius of a runaway edit.
+- **Reviewed merges only** — `main` changes only via a reviewed, CI-green PR; the worker never writes `main` directly.
+
 ## Supported versions
 
 mito is an actively self-improving project; the `main` branch is the supported version. Fixes land on `main`.
