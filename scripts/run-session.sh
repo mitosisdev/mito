@@ -21,7 +21,8 @@ cd "$REPO"
 unset CLAUDECODE   # never signal a nested session — headless must run clean
 
 # Respect the kill switch WITHOUT spinning a Claude session (saves usage while paused).
-if [ -f "$REPO/STOP" ]; then
+# Manual launches set MITO_FORCE=1 to override the pause (explicit intent).
+if [ -f "$REPO/STOP" ] && [ "${MITO_FORCE:-}" != "1" ]; then
   echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) halted: STOP present, skipping" >> "$LOG_DIR/halt.log"
   exit 0
 fi
@@ -36,4 +37,4 @@ name="$(basename "$PROMPT_FILE" .md)"
   --model sonnet \
   --output-format text \
   < "$PROMPT_FILE" \
-  >> "$LOG_DIR/${name}-${stamp}.log" 2>&1
+  2>&1 | tee -a "$LOG_DIR/${name}-${stamp}.log"

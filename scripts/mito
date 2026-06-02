@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# mito — launch a session on demand.
+#
+#   mito              # build session (default)
+#   mito build        # ship PRs from the plan
+#   mito review       # merge/close open PRs + post
+#   mito think        # brainstorm + write the next plan
+#
+# Manual launches run even if the STOP kill switch is set (explicit intent);
+# the cron schedule still respects STOP. Output streams live AND to a log.
+
+set -euo pipefail
+
+REPO="/home/sverre/mito"
+role="${1:-build}"
+
+case "$role" in
+  build)            prompt="docs/cycle-prompt.md" ;;
+  review)           prompt="docs/review-prompt.md" ;;
+  think)            prompt="docs/think-prompt.md" ;;
+  -h|--help|help)   echo "usage: mito [build|review|think]"; exit 0 ;;
+  *)                echo "unknown role '$role' — usage: mito [build|review|think]" >&2; exit 1 ;;
+esac
+
+[ -f "$REPO/STOP" ] && echo "note: STOP is set — running anyway (manual launch)." >&2
+echo "▶ mito $role  (also logging to $REPO/.mito-logs/)" >&2
+
+MITO_FORCE=1 exec "$REPO/scripts/run-session.sh" "$REPO/$prompt"
