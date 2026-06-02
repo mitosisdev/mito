@@ -1,0 +1,10 @@
+{
+  "projects": [
+    {
+      "repo": "mitosisdev/gitstory",
+      "name": "gitstory",
+      "description": "Turn any git repo's history into a shareable, animated commit timeline.",
+      "createdAt": "2026-06-02T21:27:20.302Z"
+    }
+  ]
+}

@@ -17,8 +17,8 @@ export function computeStats(
 ): Stats {
   const merged = state.pullRequests.filter((pr) => pr.status === "merged");
 
-  // Every PR ever proposed = one cycle (open + merged + closed).
-  const cyclesRun = state.pullRequests.length;
+  // Distinct build sessions that ran (each addCycle() call = one session).
+  const cyclesRun = state.cycles.length;
   const prsMerged = merged.length;
   const daysAlive = Math.max(0, Math.floor((nowMs - repoCreatedMs) / 86_400_000));
 
