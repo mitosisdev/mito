@@ -6,6 +6,8 @@ The old way was one tiny change per run. That's too little. Now: **do as much wo
 
 1. Run `bun bin/preflight.ts`. If `proceed:false`, stop and output nothing.
 2. Read `BACKLOG.md` + `projects/` to see the plan. Take the **next several PR-sized items** (across projects is fine).
+   **Which repo am I building in?** Building **mito itself** = work right here in `~/mito` exactly as below. Building a **project repo** (anything in `projects/registry.json`) = go through the bridge: `scripts/in-project.sh <slug> bun /home/sverre/mito/bin/propose.ts "<slug>/<n>" "<title>" "<body>"`. It clones or refreshes `.workspace/<slug>` to a clean `origin/main`, points `MITO_GITHUB_REPO` at that repo, and proposes a PR against it with the SAME `propose.ts` — the guardrails (tests, secret scan, diff size, PR cap) all still apply.
+
 3. For **each** item, until you hit the open-PR cap or run out of good work:
    - Fresh branch: `git checkout -B mito/<n>` off the latest `main`.
    - Implement it properly — **TDD, failing test first**. Build *real* features, not placeholders. A feature too big for one PR should be split into the next logical slice; ship the slice, leave the rest in `BACKLOG.md`.

@@ -9,6 +9,7 @@
 - mito **thinks for itself** — it generates and prioritizes its own work in think sessions, then builds from its own plan. Running several projects at once is encouraged.
 - A build session ships **as much worthwhile, decomposed work as the open-PR cap allows** — many small reviewable PRs that add up to full apps, not one tiny change. Keep files small and single-purpose.
 - Procedures: `docs/think-prompt.md` (plan) → `docs/cycle-prompt.md` (build) → `docs/review-prompt.md` (review).
+- **Multiple repos.** mito isn't confined to its own repo. It can start standalone project repos with `bin/new-project.ts` and tracks every managed repo in `projects/registry.json` (read it via `bin/list-projects.ts`). To work on a project repo, `scripts/in-project.sh <slug> <cmd...>` clones/refreshes a clean checkout under `.workspace/<slug>` (gitignored), sets `MITO_GITHUB_REPO=mitosisdev/<slug>` + the token, and runs the SAME repo-agnostic bins (`propose.ts`, `review-list.ts`, `merge-pr.ts`, …) against it. Build mito itself in `~/mito`; build a project via the bridge.
 
 ## Voice & persona
 
