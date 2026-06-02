@@ -3,16 +3,20 @@
 // Flow (decision logic lives in src/propose.ts, fully unit-tested):
 //   1. Run the suite. Fail -> discard branch, print {proposed:false,tests_failed}.
 //   2. At the 3-PR cap -> print {proposed:false,pr_cap}, open nothing.
-//   3. Else push the branch + open a PR against main, record it in state.
+//   3. Scan the diff for secrets -> if found, discard branch, hard block.
+//   4. Reject an oversized diff -> {proposed:false,diff_too_large}.
+//   5. Else push the branch + open a PR against main, record it in state.
 //
 // Usage: bun bin/propose.ts <branch> "<title>" "<body>"
 // The token is read from env and passed to git via an in-memory extraheader;
 // it is NEVER printed and never written to disk.
 import { $ } from "bun";
 import { loadConfig, requireGithub } from "../src/config";
-import { runTests, revertToLastKnownGood } from "../src/git";
+import { runTests, revertToLastKnownGood, branchDiff, branchNumstat } from "../src/git";
 import { makeGithub } from "../src/github";
 import { proposeChange } from "../src/propose";
+import { scanDiff } from "../src/secretscan";
+import { parseNumstat, checkDiffSize } from "../src/diffsize";
 import { loadState, saveState, recordProposedPr } from "../src/state";
 
 const branch = process.argv[2];
@@ -36,10 +40,20 @@ async function pushBranch(b: string): Promise<void> {
   await $`git -C ${dir} -c ${`http.extraheader=${authHeader}`} push -q ${remote} ${`${b}:${b}`}`.quiet();
 }
 
+// Pre-fetch the numstat once so the size-guard dep is a pure closure over it.
+const numstat = await branchNumstat(dir, "main");
+const caps = { maxFiles: cfg.maxPrFiles, maxLines: cfg.maxPrLines };
+
 const result = await proposeChange(
   {
     runTests: () => runTests(dir),
     countOpenPullRequests: () => gh.countOpenPullRequests(),
+    // The secret scan reads the textual diff vs main.
+    branchDiff: () => branchDiff(dir, "main"),
+    scanDiff,
+    // The size guard reads numstat (binary-safe, cheap) rather than the textual
+    // diff, so it computes its own counts and ignores the passed-in string.
+    checkDiffSize: () => checkDiffSize(parseNumstat(numstat), caps),
     pushBranch,
     openPullRequest: (i) => gh.openPullRequest(i),
     discardBranch: () => revertToLastKnownGood(dir),

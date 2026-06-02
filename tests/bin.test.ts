@@ -13,3 +13,10 @@ test("preflight reports killswitch when STOP file present", async () => {
   expect(JSON.parse(out.trim()).proceed).toBe(false);
   rmSync(stop, { force: true });
 });
+
+test("comment-pr rejects bad args without making a network call", async () => {
+  // Missing the body arg -> bad_args, exits non-zero before touching GitHub.
+  const res = await $`bun bin/comment-pr.ts 5`.nothrow().quiet();
+  expect(res.exitCode).not.toBe(0);
+  expect(JSON.parse(res.stdout.toString().trim())).toEqual({ commented: false, reason: "bad_args" });
+});

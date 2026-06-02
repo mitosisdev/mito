@@ -9,6 +9,11 @@ export interface ProposeInput { branch: string; title: string; body: string; }
 export interface ProposeDeps {
   runTests(): Promise<boolean>;
   countOpenPullRequests(): Promise<number>;
+  // The branch's diff vs main — fed to the secret scan and size guard before
+  // anything is published.
+  branchDiff(): Promise<string>;
+  scanDiff(diff: string): { clean: boolean; findings: string[] };
+  checkDiffSize(diff: string): { allowed: boolean; files: number; lines: number };
   pushBranch(branch: string): Promise<void>;
   openPullRequest(input: { head: string; base: string; title: string; body: string }): Promise<{ number: number; url: string }>;
   discardBranch(): Promise<void>;
@@ -16,6 +21,8 @@ export interface ProposeDeps {
 
 export type ProposeResult =
   | { proposed: false; reason: "tests_failed" | "pr_cap" }
+  | { proposed: false; reason: "secret_detected"; findings: string[] }
+  | { proposed: false; reason: "diff_too_large"; files: number; lines: number }
   | { proposed: true; number: number; url: string };
 
 export const PR_CAP = 3;
@@ -32,7 +39,24 @@ export async function proposeChange(deps: ProposeDeps, input: ProposeInput): Pro
     return { proposed: false, reason: "pr_cap" };
   }
 
-  // 3. Publish the branch, then open the PR against main.
+  // 3. Inspect the actual diff before publishing anything.
+  const diff = await deps.branchDiff();
+
+  // 3a. Secret scan is a HARD block: a leaked key must never reach a public
+  // commit. Discard the branch so the bad work doesn't linger.
+  const scan = deps.scanDiff(diff);
+  if (!scan.clean) {
+    await deps.discardBranch();
+    return { proposed: false, reason: "secret_detected", findings: scan.findings };
+  }
+
+  // 3b. Bound the blast radius — refuse an oversized change outright.
+  const size = deps.checkDiffSize(diff);
+  if (!size.allowed) {
+    return { proposed: false, reason: "diff_too_large", files: size.files, lines: size.lines };
+  }
+
+  // 4. Publish the branch, then open the PR against main.
   await deps.pushBranch(input.branch);
   const pr = await deps.openPullRequest({
     head: input.branch, base: "main", title: input.title, body: input.body,
