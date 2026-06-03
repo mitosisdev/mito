@@ -22,7 +22,7 @@ export async function reviewList(deps: ReviewDeps): Promise<ReviewItem[]> {
     prs.map(async (pr) => ({
       ...pr,
       files: await deps.getPullRequestFiles(pr.number),
-      ci: await deps.getCombinedStatus(pr.head),
+      ci: await deps.getCombinedStatus(pr.headSha),
     })),
   );
 }
@@ -33,8 +33,8 @@ export type MergeOutcome =
 
 // The merge gate. Refuses unless CI is green. On success, squash-merges and
 // deletes the source branch.
-export async function mergeIfGreen(deps: ReviewDeps, number: number, head: string): Promise<MergeOutcome> {
-  const ci = await deps.getCombinedStatus(head);
+export async function mergeIfGreen(deps: ReviewDeps, number: number, head: string, headSha: string): Promise<MergeOutcome> {
+  const ci = await deps.getCombinedStatus(headSha);
   if (ci !== "success") {
     return { merged: false, reason: "ci_not_green", ci };
   }
