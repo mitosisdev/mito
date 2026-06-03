@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test";
-import { parseBacklog } from "../src/backlog";
+import { parseBacklog, markTaskDone } from "../src/backlog";
 
 const FIXTURE = `# Backlog
 
@@ -84,4 +84,38 @@ test("returns one task per bullet point", () => {
   const tasks = parseBacklog(FIXTURE);
   // FIXTURE has 8 bullet points (3 Safety + 3 Get better + 1 Later)
   expect(tasks).toHaveLength(7);
+});
+
+// markTaskDone tests
+test("markTaskDone wraps matching item in strikethrough", () => {
+  const md = "## Safety\n- Detect thrash — don't keep churning.\n- Other item.";
+  const result = markTaskDone(md, "thrash");
+  expect(result).toContain("~~Detect thrash");
+  expect(result).not.toContain("~~Other item");
+});
+
+test("markTaskDone is case-insensitive", () => {
+  const md = "## Safety\n- Detect Thrash — something.";
+  const result = markTaskDone(md, "THRASH");
+  expect(result).toContain("~~Detect Thrash");
+});
+
+test("markTaskDone is idempotent on already-done items", () => {
+  const md = "## Safety\n- ~~Detect thrash — something.~~";
+  const result = markTaskDone(md, "thrash");
+  // Should not double-wrap
+  expect(result).not.toContain("~~~~");
+  expect(result).toContain("~~Detect thrash");
+});
+
+test("markTaskDone returns unchanged markdown when no match", () => {
+  const md = "## Safety\n- Some unrelated item.";
+  const result = markTaskDone(md, "totally missing");
+  expect(result).toBe(md);
+});
+
+test("markTaskDone handles [project] prefixed items", () => {
+  const md = "## Get better\n- **[mito]** Add `src/backlog.ts` — parse into typed queue.";
+  const result = markTaskDone(md, "backlog.ts");
+  expect(result).toContain("~~**[mito]** Add");
 });
