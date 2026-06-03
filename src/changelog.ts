@@ -15,3 +15,19 @@ export function addChangelogEntry(existing: string, entry: string, dateIso: stri
   const body = [HEADER, "", bullet, ...priorLines].join("\n");
   return body + "\n";
 }
+
+// Parse a changelog back into structured data, newest first.
+// Returns an empty array for empty or header-only files.
+export function parseChangelog(text: string): Array<{ date: string; entry: string }> {
+  const bulletRe = /^- (\d{4}-\d{2}-\d{2}) — (.+)$/;
+  const results: Array<{ date: string; entry: string }> = [];
+
+  for (const line of text.split("\n")) {
+    const m = bulletRe.exec(line.trim());
+    if (m) {
+      results.push({ date: m[1], entry: m[2] });
+    }
+  }
+
+  return results;
+}

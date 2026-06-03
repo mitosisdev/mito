@@ -8,6 +8,7 @@ import { loadConfig, requireGithub } from "../src/config";
 import { makeGithub, nativeFetch } from "../src/github";
 import { mergeIfGreen } from "../src/review";
 import { loadState, saveState, markPrMerged } from "../src/state";
+import { addChangelogEntry } from "../src/changelog";
 
 const number = Number(process.argv[2]);
 if (!Number.isInteger(number) || number <= 0) {
@@ -51,5 +52,16 @@ saveState(cfg.statePath, state);
 // Refresh the status-site stats and README stats now that a PR has merged.
 await $`bun bin/update-stats.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();
 await $`bun bin/update-readme.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();
+
+// Append an entry to CHANGELOG.md for this merge.
+try {
+  const changelogPath = new URL("../CHANGELOG.md", import.meta.url).pathname;
+  const existing = await Bun.file(changelogPath).text().catch(() => "");
+  const dateIso = new Date().toISOString().slice(0, 10);
+  const updated = addChangelogEntry(existing, pr.title, dateIso);
+  await Bun.write(changelogPath, updated);
+} catch {
+  // Non-fatal — changelog update failure must never block a merge.
+}
 
 console.log(JSON.stringify(outcome));
