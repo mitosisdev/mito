@@ -3,7 +3,7 @@ import { test, expect } from "bun:test";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { rmSync } from "node:fs";
-import { loadState, saveState, addCycle, emptyState, recordProposedPr, markPrMerged, markPrClosed, addRejectedIdea, wasRejected } from "../src/state";
+import { loadState, saveState, addCycle, emptyState, recordProposedPr, markPrMerged, markPrClosed, addRejectedIdea, wasRejected, startBuildCycle, incrementCyclePrs, completeBuildCycle } from "../src/state";
 
 function tmpPath() { return join(tmpdir(), `mito-state-${Math.floor(performance.now())}-${process.pid}.json`); }
 
@@ -84,4 +84,75 @@ test("addCycle appends and saveState/loadState round-trips", () => {
   expect(loaded.cycles[0]!.action).toBe("added foo");
   expect(typeof loaded.cycles[0]!.id).toBe("number");
   rmSync(p, { force: true });
+});
+
+// BuildCycle (session-level) tests
+test("startBuildCycle adds an entry with startedAt and prsOpened=0, no completedAt", () => {
+  let s = emptyState();
+  s = startBuildCycle(s);
+  expect(s.buildCycles).toHaveLength(1);
+  const c = s.buildCycles[0]!;
+  expect(c.id).toMatch(/^cycle-/);
+  expect(typeof c.startedAt).toBe("string");
+  expect(c.prsOpened).toBe(0);
+  expect(c.completedAt).toBeUndefined();
+});
+
+test("startBuildCycle persists through saveState/loadState round-trip", () => {
+  const p = tmpPath();
+  let s = emptyState();
+  s = startBuildCycle(s);
+  saveState(p, s);
+  const loaded = loadState(p);
+  expect(loaded.buildCycles).toHaveLength(1);
+  expect(loaded.buildCycles[0]!.prsOpened).toBe(0);
+  rmSync(p, { force: true });
+});
+
+test("loadState backfills empty buildCycles for older state files", () => {
+  const p = tmpPath();
+  // biome-ignore lint/suspicious/noExplicitAny: simulates pre-buildCycles state file
+  saveState(p, { cycles: [], backlog: [], lastKnownGood: null, pullRequests: [], rejectedIdeas: [] } as any);
+  const loaded = loadState(p);
+  expect(Array.isArray(loaded.buildCycles)).toBe(true);
+  expect(loaded.buildCycles).toHaveLength(0);
+  rmSync(p, { force: true });
+});
+
+test("incrementCyclePrs increments prsOpened on the most recent incomplete cycle", () => {
+  let s = emptyState();
+  s = startBuildCycle(s);
+  expect(s.buildCycles[0]!.prsOpened).toBe(0);
+  s = incrementCyclePrs(s);
+  expect(s.buildCycles[0]!.prsOpened).toBe(1);
+  s = incrementCyclePrs(s);
+  expect(s.buildCycles[0]!.prsOpened).toBe(2);
+});
+
+test("incrementCyclePrs is a no-op when no incomplete cycle exists", () => {
+  let s = emptyState();
+  s = startBuildCycle(s);
+  s = completeBuildCycle(s);
+  const before = s.buildCycles[0]!.prsOpened;
+  s = incrementCyclePrs(s);
+  expect(s.buildCycles[0]!.prsOpened).toBe(before);
+});
+
+test("completeBuildCycle sets completedAt on the most recent incomplete cycle", () => {
+  let s = emptyState();
+  s = startBuildCycle(s);
+  expect(s.buildCycles[0]!.completedAt).toBeUndefined();
+  s = completeBuildCycle(s);
+  expect(typeof s.buildCycles[0]!.completedAt).toBe("string");
+});
+
+test("cyclesRun from buildCycles counts only completed cycles", () => {
+  let s = emptyState();
+  // Cycle 1 — completed
+  s = startBuildCycle(s);
+  s = completeBuildCycle(s);
+  // Cycle 2 — incomplete (in-progress)
+  s = startBuildCycle(s);
+  const completed = s.buildCycles.filter((c) => c.completedAt !== undefined);
+  expect(completed).toHaveLength(1);
 });

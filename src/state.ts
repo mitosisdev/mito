@@ -1,6 +1,13 @@
 // src/state.ts
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 
+export interface BuildCycle {
+  id: string;          // e.g. "cycle-2026-06-03T07:01:00Z"
+  startedAt: string;   // ISO timestamp when preflight ran
+  prsOpened: number;   // how many PRs were opened this session (0 until resolved)
+  completedAt?: string; // set when the session ends (optional — sessions can be interrupted)
+}
+
 export interface CycleRecord {
   id: number;
   timestamp: string;
@@ -34,19 +41,20 @@ export interface PullRequestRecord {
 
 export interface State {
   cycles: CycleRecord[];
+  buildCycles: BuildCycle[];
   backlog: BacklogItem[];
   lastKnownGood: string | null;
   pullRequests: PullRequestRecord[];
   rejectedIdeas: RejectedIdea[];
 }
 
-export function emptyState(): State { return { cycles: [], backlog: [], lastKnownGood: null, pullRequests: [], rejectedIdeas: [] }; }
+export function emptyState(): State { return { cycles: [], buildCycles: [], backlog: [], lastKnownGood: null, pullRequests: [], rejectedIdeas: [] }; }
 
 export function loadState(path: string): State {
   if (!existsSync(path)) return emptyState();
   const raw = JSON.parse(readFileSync(path, "utf8")) as Partial<State>;
   // Backfill fields older state files predate, so callers always get arrays.
-  return { ...emptyState(), ...raw, pullRequests: raw.pullRequests ?? [], rejectedIdeas: raw.rejectedIdeas ?? [] };
+  return { ...emptyState(), ...raw, buildCycles: raw.buildCycles ?? [], pullRequests: raw.pullRequests ?? [], rejectedIdeas: raw.rejectedIdeas ?? [] };
 }
 
 export function saveState(path: string, state: State): void {
@@ -103,4 +111,35 @@ export function addRejectedIdea(state: State, title: string, reason: string): St
 
 export function wasRejected(state: State, title: string): boolean {
   return state.rejectedIdeas.some((r) => r.title === title);
+}
+
+// --- BuildCycle (session-level tracking) ---
+
+/** Push a new in-progress BuildCycle entry. Call at preflight when proceed=true. */
+export function startBuildCycle(state: State): State {
+  const startedAt = new Date().toISOString();
+  const cycle: BuildCycle = { id: `cycle-${startedAt}`, startedAt, prsOpened: 0 };
+  return { ...state, buildCycles: [...state.buildCycles, cycle] };
+}
+
+/** Increment prsOpened on the most recent incomplete cycle. No-op if none exists. */
+export function incrementCyclePrs(state: State): State {
+  const idx = [...state.buildCycles].reverse().findIndex((c) => c.completedAt === undefined);
+  if (idx === -1) return state;
+  const realIdx = state.buildCycles.length - 1 - idx;
+  const updated = state.buildCycles.map((c, i) =>
+    i === realIdx ? { ...c, prsOpened: c.prsOpened + 1 } : c,
+  );
+  return { ...state, buildCycles: updated };
+}
+
+/** Mark the most recent incomplete cycle as completed. No-op if none exists. */
+export function completeBuildCycle(state: State): State {
+  const idx = [...state.buildCycles].reverse().findIndex((c) => c.completedAt === undefined);
+  if (idx === -1) return state;
+  const realIdx = state.buildCycles.length - 1 - idx;
+  const updated = state.buildCycles.map((c, i) =>
+    i === realIdx ? { ...c, completedAt: new Date().toISOString() } : c,
+  );
+  return { ...state, buildCycles: updated };
 }

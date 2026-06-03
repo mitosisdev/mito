@@ -22,12 +22,12 @@ test("daysAlive is 0 when now === repoCreated", () => {
   expect(s.daysAlive).toBe(0);
 });
 
-test("cyclesRun counts build sessions, not PRs; prsMerged counts only merged PRs", () => {
+test("cyclesRun counts completed build sessions, not PRs; prsMerged counts only merged PRs", () => {
   const state: State = {
     ...emptyState(),
-    cycles: [
-      { id: 1, timestamp: "t", action: "built feature A", branch: "mito/1", testsPassed: true, committed: true, posted: false },
-      { id: 2, timestamp: "t", action: "built feature B", branch: "mito/2", testsPassed: true, committed: true, posted: false },
+    buildCycles: [
+      { id: "cycle-2026-06-02T08:00:00Z", startedAt: "2026-06-02T08:00:00Z", prsOpened: 1, completedAt: "2026-06-02T08:05:00Z" },
+      { id: "cycle-2026-06-03T09:00:00Z", startedAt: "2026-06-03T09:00:00Z", prsOpened: 1, completedAt: "2026-06-03T09:10:00Z" },
     ],
     pullRequests: [
       { number: 1, branch: "mito/1", url: "u", title: "first", status: "merged", proposedAt: "t", resolvedAt: "2026-06-02T10:00:00Z", mergeSha: "abc" },
@@ -36,7 +36,7 @@ test("cyclesRun counts build sessions, not PRs; prsMerged counts only merged PRs
     ],
   };
   const s = computeStats(state, now, base);
-  expect(s.cyclesRun).toBe(2); // 2 build sessions, not 3 PRs
+  expect(s.cyclesRun).toBe(2); // 2 completed build sessions, not 3 PRs
   expect(s.prsMerged).toBe(1);
 });
 
@@ -49,6 +49,19 @@ test("cyclesRun is 0 when no build sessions have run even if PRs exist", () => {
   };
   const s = computeStats(state, now, base);
   expect(s.cyclesRun).toBe(0);
+});
+
+test("cyclesRun counts only completed cycles, not in-progress ones", () => {
+  const state: State = {
+    ...emptyState(),
+    buildCycles: [
+      { id: "cycle-2026-06-02T08:00:00Z", startedAt: "2026-06-02T08:00:00Z", prsOpened: 1, completedAt: "2026-06-02T08:05:00Z" },
+      // This one is in-progress (no completedAt) — should NOT count
+      { id: "cycle-2026-06-05T09:00:00Z", startedAt: "2026-06-05T09:00:00Z", prsOpened: 0 },
+    ],
+  };
+  const s = computeStats(state, now, base);
+  expect(s.cyclesRun).toBe(1);
 });
 
 test("lastChange is the title of the most-recently-merged PR", () => {

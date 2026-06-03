@@ -18,7 +18,7 @@ import { makeGithub, nativeFetch } from "../src/github";
 import { proposeChange } from "../src/propose";
 import { scanDiff } from "../src/secretscan";
 import { parseNumstat, checkDiffSize } from "../src/diffsize";
-import { loadState, saveState, recordProposedPr } from "../src/state";
+import { loadState, saveState, recordProposedPr, incrementCyclePrs, completeBuildCycle } from "../src/state";
 import { parseNumstatFiles, checkThrash } from "../src/thrash";
 
 const branch = process.argv[2];
@@ -75,6 +75,8 @@ const result = await proposeChange(
 if (result.proposed) {
   let s = loadState(cfg.statePath);
   s = recordProposedPr(s, { number: result.number, branch, url: result.url, title, files: changedFiles });
+  s = incrementCyclePrs(s);
+  s = completeBuildCycle(s);
   saveState(cfg.statePath, s);
 }
 
