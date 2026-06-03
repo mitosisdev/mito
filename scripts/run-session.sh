@@ -27,6 +27,15 @@ if [ -f "$REPO/STOP" ] && [ "${MITO_FORCE:-}" != "1" ]; then
   exit 0
 fi
 
+# Single-session lock: never run two sessions at once (they'd race each other's git).
+# A tick that fires while another session is still running just skips this round —
+# this is what makes a tight schedule safe.
+exec 9>"$LOG_DIR/.session.lock"
+if ! flock -n 9; then
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) skipped: another session already running" >> "$LOG_DIR/halt.log"
+  exit 0
+fi
+
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
 name="$(basename "$PROMPT_FILE" .md)"
 
