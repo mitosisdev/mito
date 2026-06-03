@@ -48,7 +48,8 @@ let state = loadState(cfg.statePath);
 state = markPrMerged(state, number, outcome.sha);
 saveState(cfg.statePath, state);
 
-// Refresh the status-site stats now that a PR has merged.
+// Refresh the status-site stats and README stats now that a PR has merged.
 await $`bun bin/update-stats.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();
+await $`bun bin/update-readme.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();
 
 console.log(JSON.stringify(outcome));

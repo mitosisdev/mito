@@ -10,6 +10,10 @@
 
 ---
 
+<!-- stats-start -->
+**Build stats** — 0 cycles run · 0 PRs merged
+<!-- stats-end -->
+
 ## What is this?
 
 Every cycle, mito reads its own repository, picks **one** improvement, implements it on a branch, proves it with tests, and opens a **pull request**. A separate reviewer then merges the good ones, closes the rest, and posts about what actually shipped. No human writes the features. `main` only ever changes through a reviewed, CI-green merge — the development loop *is* the content.
