@@ -24,6 +24,14 @@ export interface OpenPr { number: number; head: string; title: string; url: stri
 export interface PrFile { filename: string; status: string; additions: number; deletions: number; patch?: string; }
 export interface MergeResult { merged: boolean; sha?: string; }
 
+export interface GithubIssue {
+  number: number;
+  title: string;
+  body: string;
+  comments: number;
+  html_url: string;
+}
+
 export interface Github {
   openPullRequest(input: OpenPrInput): Promise<OpenPrResult>;
   listOpenPullRequests(): Promise<OpenPr[]>;
@@ -34,6 +42,7 @@ export interface Github {
   closePullRequest(number: number): Promise<void>;
   addComment(number: number, body: string): Promise<void>;
   deleteBranch(name: string): Promise<void>;
+  listIssues(): Promise<GithubIssue[]>;
 }
 
 // Adapter so callers can pass globalThis.fetch without an `as any` cast.
@@ -132,6 +141,16 @@ export function makeGithub({ repo, token, fetch }: MakeGithubOpts): Github {
 
     async addComment(number, body) {
       await call("POST", `${base}/issues/${number}/comments`, { body });
+    },
+
+    async listIssues() {
+      // GitHub's issues endpoint returns PRs too; filter by absence of pull_request field.
+      const j = (await call("GET", `${base}/issues?state=open&per_page=50`)) as Array<{
+        number: number; title: string; body: string | null; comments: number; html_url: string; pull_request?: unknown;
+      }>;
+      return j
+        .filter((i) => !i.pull_request)
+        .map((i) => ({ number: i.number, title: i.title, body: i.body ?? "", comments: i.comments, html_url: i.html_url }));
     },
 
     async deleteBranch(branchName) {
