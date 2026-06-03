@@ -52,4 +52,12 @@ saveState(cfg.statePath, state);
 await $`bun bin/update-stats.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();
 await $`bun bin/update-readme.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();
 
+// Post an X update — skips gracefully when X is not configured.
+const merged = loadState(cfg.statePath).pullRequests.find((p) => p.number === number);
+if (merged) {
+  const { draftMergeMessage } = await import("../src/xpost.js");
+  const text = draftMergeMessage(merged);
+  await $`bun bin/publish.ts ${text}`.nothrow().quiet();
+}
+
 console.log(JSON.stringify(outcome));
