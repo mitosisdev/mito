@@ -37,6 +37,7 @@ const outcome = await mergeIfGreen(
   },
   number,
   pr.head,
+  pr.headSha,
 );
 
 if (!outcome.merged) {
