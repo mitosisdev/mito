@@ -4,10 +4,12 @@
 //
 // Usage: bun bin/merge-pr.ts <number>
 import { $ } from "bun";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { loadConfig, requireGithub } from "../src/config";
 import { makeGithub, nativeFetch } from "../src/github";
 import { mergeIfGreen } from "../src/review";
 import { loadState, saveState, markPrMerged } from "../src/state";
+import { addChangelogEntry } from "../src/changelog";
 
 const number = Number(process.argv[2]);
 if (!Number.isInteger(number) || number <= 0) {
@@ -47,6 +49,12 @@ if (!outcome.merged) {
 let state = loadState(cfg.statePath);
 state = markPrMerged(state, number, outcome.sha);
 saveState(cfg.statePath, state);
+
+// Append to CHANGELOG.md.
+const changelogPath = new URL("../CHANGELOG.md", import.meta.url).pathname;
+const existing = existsSync(changelogPath) ? readFileSync(changelogPath, "utf8") : "# Changelog\n";
+const updated = addChangelogEntry(existing, pr.title, new Date().toISOString().slice(0, 10));
+writeFileSync(changelogPath, updated, "utf8");
 
 // Refresh the status-site stats and README stats now that a PR has merged.
 await $`bun bin/update-stats.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();

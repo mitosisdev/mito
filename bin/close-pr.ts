@@ -3,9 +3,11 @@
 // state. A closed PR is a normal, healthy outcome.
 //
 // Usage: bun bin/close-pr.ts <number> "<reason>"
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { loadConfig, requireGithub } from "../src/config";
 import { makeGithub, nativeFetch } from "../src/github";
 import { loadState, saveState, markPrClosed, addRejectedIdea } from "../src/state";
+import { addChangelogEntry } from "../src/changelog";
 
 const number = Number(process.argv[2]);
 const reason = process.argv[3];
@@ -32,5 +34,14 @@ state = markPrClosed(state, number, reason);
 const closedPr = state.pullRequests.find((p) => p.number === number);
 if (closedPr) state = addRejectedIdea(state, closedPr.title, reason);
 saveState(cfg.statePath, state);
+
+// Append to CHANGELOG.md.
+const changelogPath = new URL("../CHANGELOG.md", import.meta.url).pathname;
+const existing = existsSync(changelogPath) ? readFileSync(changelogPath, "utf8") : "# Changelog\n";
+const entry = pr
+  ? `Closed #${number}: ${pr.title} — ${reason}`
+  : `Closed #${number} — ${reason}`;
+const updated = addChangelogEntry(existing, entry, new Date().toISOString().slice(0, 10));
+writeFileSync(changelogPath, updated, "utf8");
 
 console.log(JSON.stringify({ closed: true, number, reason }));
