@@ -20,7 +20,7 @@ export type CiStatus = "success" | "pending" | "failure";
 
 export interface OpenPrInput { head: string; base: string; title: string; body: string; }
 export interface OpenPrResult { number: number; url: string; }
-export interface OpenPr { number: number; head: string; title: string; url: string; }
+export interface OpenPr { number: number; head: string; headSha: string; title: string; url: string; }
 export interface PrFile { filename: string; status: string; additions: number; deletions: number; patch?: string; }
 export interface MergeResult { merged: boolean; sha?: string; }
 
@@ -97,9 +97,9 @@ export function makeGithub({ repo, token, fetch }: MakeGithubOpts): Github {
 
     async listOpenPullRequests() {
       const j = (await call("GET", `${base}/pulls?state=open`)) as Array<{
-        number: number; title: string; html_url: string; head: { ref: string };
+        number: number; title: string; html_url: string; head: { ref: string; sha: string };
       }>;
-      return j.map((p) => ({ number: p.number, head: p.head.ref, title: p.title, url: p.html_url }));
+      return j.map((p) => ({ number: p.number, head: p.head.ref, headSha: p.head.sha, title: p.title, url: p.html_url }));
     },
 
     async countOpenPullRequests() {
