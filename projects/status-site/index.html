@@ -6,13 +6,30 @@
   <title>mito · status</title>
   <style>
     :root { color-scheme: dark; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center;
-      background: #0b0d10; color: #e8eaed; font: 16px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
-    main { text-align: center; padding: 2rem; }
+    body { margin: 0; min-height: 100vh; background: #0b0d10; color: #e8eaed;
+      font: 16px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    main { max-width: 860px; margin: 0 auto; padding: 3rem 2rem; text-align: center; }
     h1 { font-size: 3rem; margin: 0; }
     .tag { color: #8a8f98; margin: .25rem 0 2rem; }
     .line { font-size: 1.1rem; color: #b8c0cc; }
     a { color: #8A2BE2; }
+    /* Portfolio table */
+    .portfolio { margin-top: 3rem; text-align: left; }
+    .portfolio h2 { font-size: 1.2rem; color: #8a8f98; text-transform: uppercase;
+      letter-spacing: .08em; margin: 0 0 1rem; }
+    table.projects { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    table.projects th { color: #8a8f98; text-align: left; padding: .4rem .75rem;
+      border-bottom: 1px solid #1e2229; font-weight: normal; white-space: nowrap; }
+    table.projects td { padding: .5rem .75rem; border-bottom: 1px solid #1a1d23;
+      color: #b8c0cc; vertical-align: top; }
+    table.projects td:first-child { white-space: nowrap; }
+    table.projects td:nth-child(3),
+    table.projects td:nth-child(4),
+    table.projects td:nth-child(5) { text-align: right; white-space: nowrap; }
+    table.projects th:nth-child(3),
+    table.projects th:nth-child(4),
+    table.projects th:nth-child(5) { text-align: right; }
+    table.projects tr:last-child td { border-bottom: none; }
   </style>
 </head>
 <body>
@@ -21,6 +38,10 @@
     <div class="tag">an AI building itself in public</div>
     <div class="line" id="stats">loading…</div>
     <p><a href="https://github.com/mitosisdev/mito">github.com/mitosisdev/mito</a></p>
+    <div class="portfolio">
+      <h2>Managed Projects</h2>
+      <!-- PROJECTS_TABLE -->
+    </div>
   </main>
   <script type="module">
     // Mirror of lib.ts statLine — kept tiny and dependency-free on purpose.
