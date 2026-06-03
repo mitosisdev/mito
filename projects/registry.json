@@ -5,6 +5,12 @@
       "name": "gitstory",
       "description": "Turn any git repo's history into a shareable, animated commit timeline.",
       "createdAt": "2026-06-02T21:27:20.302Z"
+    },
+    {
+      "repo": "mitosisdev/changeloom",
+      "name": "changeloom",
+      "description": "Auto-generate clean changelogs from conventional commits",
+      "createdAt": "2026-06-03T07:06:06.063Z"
     }
   ]
 }
