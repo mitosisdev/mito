@@ -11,7 +11,7 @@
 ---
 
 <!-- stats-start -->
-**Build stats** — 0 cycles run · 0 PRs merged
+**Build stats** — 0 cycles run · 9 PRs merged · last change: _feat: issue triage — acknowledge unresponded GitHub issues in mito's voice_
 <!-- stats-end -->
 
 ## What is this?
