@@ -5,6 +5,7 @@
 //   2. At the 3-PR cap -> print {proposed:false,pr_cap}, open nothing.
 //   3. Scan the diff for secrets -> if found, discard branch, hard block.
 //   4. Reject an oversized diff -> {proposed:false,diff_too_large}.
+//   4b. Thrash guard -> if files overlap a recently-rejected PR, {proposed:false,thrash_detected}.
 //   5. Else push the branch + open a PR against main, record it in state.
 //
 // Usage: bun bin/propose.ts <branch> "<title>" "<body>"
@@ -18,6 +19,7 @@ import { proposeChange } from "../src/propose";
 import { scanDiff } from "../src/secretscan";
 import { parseNumstat, checkDiffSize } from "../src/diffsize";
 import { loadState, saveState, recordProposedPr } from "../src/state";
+import { parseNumstatFiles, checkThrash } from "../src/thrash";
 
 const branch = process.argv[2];
 const title = process.argv[3];
@@ -40,9 +42,15 @@ async function pushBranch(b: string): Promise<void> {
   await $`git -C ${dir} -c ${`http.extraheader=${authHeader}`} push -q ${remote} ${`${b}:${b}`}`.quiet();
 }
 
-// Pre-fetch the numstat once so the size-guard dep is a pure closure over it.
+// Pre-fetch the numstat once so the size-guard and thrash-check deps can share it.
 const numstat = await branchNumstat(dir, "main");
 const caps = { maxFiles: cfg.maxPrFiles, maxLines: cfg.maxPrLines };
+
+// Parse file paths from numstat now — used by both thrash check and state record.
+const changedFiles = parseNumstatFiles(numstat);
+
+// Load state to supply closed-PR history to the thrash guard.
+const state = loadState(cfg.statePath);
 
 const result = await proposeChange(
   {
@@ -54,6 +62,9 @@ const result = await proposeChange(
     // The size guard reads numstat (binary-safe, cheap) rather than the textual
     // diff, so it computes its own counts and ignores the passed-in string.
     checkDiffSize: () => checkDiffSize(parseNumstat(numstat), caps),
+    // Thrash guard: ignore the diff string, use the pre-parsed numstat file list.
+    parseFiles: () => changedFiles,
+    checkThrash: (files) => checkThrash(state.pullRequests, files),
     pushBranch,
     openPullRequest: (i) => gh.openPullRequest(i),
     discardBranch: () => revertToLastKnownGood(dir),
@@ -62,9 +73,9 @@ const result = await proposeChange(
 );
 
 if (result.proposed) {
-  let state = loadState(cfg.statePath);
-  state = recordProposedPr(state, { number: result.number, branch, url: result.url, title });
-  saveState(cfg.statePath, state);
+  let s = loadState(cfg.statePath);
+  s = recordProposedPr(s, { number: result.number, branch, url: result.url, title, files: changedFiles });
+  saveState(cfg.statePath, s);
 }
 
 console.log(JSON.stringify(result));

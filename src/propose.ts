@@ -14,6 +14,11 @@ export interface ProposeDeps {
   branchDiff(): Promise<string>;
   scanDiff(diff: string): { clean: boolean; findings: string[] };
   checkDiffSize(diff: string): { allowed: boolean; files: number; lines: number };
+  // Optional thrash guard — checks whether the branch is churning files that
+  // were already in a recently-rejected PR. Omit to skip the check.
+  checkThrash?: (files: string[]) => { thrash: boolean; closedPrNumber?: number };
+  // Parse file paths out of the numstat string for the thrash check.
+  parseFiles?: (diff: string) => string[];
   pushBranch(branch: string): Promise<void>;
   openPullRequest(input: { head: string; base: string; title: string; body: string }): Promise<{ number: number; url: string }>;
   discardBranch(): Promise<void>;
@@ -23,6 +28,7 @@ export type ProposeResult =
   | { proposed: false; reason: "tests_failed" | "pr_cap" }
   | { proposed: false; reason: "secret_detected"; findings: string[] }
   | { proposed: false; reason: "diff_too_large"; files: number; lines: number }
+  | { proposed: false; reason: "thrash_detected"; closedPrNumber?: number }
   | { proposed: true; number: number; url: string };
 
 export const PR_CAP = 3;
@@ -54,6 +60,16 @@ export async function proposeChange(deps: ProposeDeps, input: ProposeInput): Pro
   const size = deps.checkDiffSize(diff);
   if (!size.allowed) {
     return { proposed: false, reason: "diff_too_large", files: size.files, lines: size.lines };
+  }
+
+  // 3c. Thrash guard — if the worker is repeating files from a rejected PR,
+  // stop before pushing the same churned work again.
+  if (deps.checkThrash && deps.parseFiles) {
+    const files = deps.parseFiles(diff);
+    const t = deps.checkThrash(files);
+    if (t.thrash) {
+      return { proposed: false, reason: "thrash_detected", closedPrNumber: t.closedPrNumber };
+    }
   }
 
   // 4. Publish the branch, then open the PR against main.

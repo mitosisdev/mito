@@ -126,3 +126,30 @@ test("opens the PR with head=branch and base=main", async () => {
   }), input);
   expect(seen).toEqual({ head: "mito/5", base: "main", title: "add widget", body: "does a thing" });
 });
+
+test("thrash guard skipped when deps not provided", async () => {
+  // No checkThrash or parseFiles in deps — should still propose normally.
+  const r = await proposeChange(deps({}), input);
+  expect(r).toEqual({ proposed: true, number: 42, url: "https://github.com/mitosisdev/mito/pull/42" });
+});
+
+test("thrash_detected blocks proposal and returns closedPrNumber", async () => {
+  let pushed = false;
+  const r = await proposeChange(deps({
+    branchDiff: async () => "10\t2\tsrc/foo.ts",
+    parseFiles: (d) => d.split("\n").filter(Boolean).map((l) => l.split("\t")[2] ?? ""),
+    checkThrash: () => ({ thrash: true, closedPrNumber: 5 }),
+    pushBranch: async () => { pushed = true; },
+  }), input);
+  expect(r).toEqual({ proposed: false, reason: "thrash_detected", closedPrNumber: 5 });
+  expect(pushed).toBe(false);
+});
+
+test("no thrash when checkThrash returns thrash=false", async () => {
+  const r = await proposeChange(deps({
+    branchDiff: async () => "10\t2\tsrc/new.ts",
+    parseFiles: (d) => d.split("\n").filter(Boolean).map((l) => l.split("\t")[2] ?? ""),
+    checkThrash: () => ({ thrash: false }),
+  }), input);
+  expect(r).toEqual({ proposed: true, number: 42, url: "https://github.com/mitosisdev/mito/pull/42" });
+});
