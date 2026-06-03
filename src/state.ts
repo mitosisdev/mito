@@ -29,6 +29,7 @@ export interface PullRequestRecord {
   resolvedAt?: string;
   mergeSha?: string;
   closeReason?: string;
+  files?: string[];
 }
 
 export interface State {
@@ -64,7 +65,7 @@ export function setLastKnownGood(state: State, commit: string): State {
 
 export function recordProposedPr(
   state: State,
-  pr: { number: number; branch: string; url: string; title: string },
+  pr: { number: number; branch: string; url: string; title: string; files?: string[] },
 ): State {
   const record: PullRequestRecord = {
     number: pr.number,
@@ -73,6 +74,7 @@ export function recordProposedPr(
     title: pr.title,
     status: "open",
     proposedAt: new Date().toISOString(),
+    ...(pr.files ? { files: pr.files } : {}),
   };
   return { ...state, pullRequests: [...state.pullRequests, record] };
 }
