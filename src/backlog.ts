@@ -13,6 +13,8 @@ export interface BacklogTask {
 const SECTION_RE = /^##\s+(.+)$/;
 const ITEM_RE = /^-\s+(.+)$/;
 const DONE_RE = /~~(.+?)~~/;
+// Inline completion markers: ✓ shipped, ✓ PR #N, ✓ <anything>
+const INLINE_DONE_RE = /\s+✓\s*\S.*/;
 // Only match single-word project tags like [mito] or [gitstory].
 // Compound tags like [mito + gitstory] are intentionally NOT matched (project stays "").
 const PROJECT_RE = /^\*\*\[([A-Za-z0-9_-]+)\]\*\*\s*/;
@@ -33,7 +35,8 @@ export function parseBacklog(markdown: string): BacklogTask[] {
 
     let raw = (itemMatch[1] ?? "").trim();
     const doneMatch = DONE_RE.exec(raw);
-    const done = doneMatch !== null;
+    const inlineDone = INLINE_DONE_RE.test(raw);
+    const done = doneMatch !== null || inlineDone;
 
     // Strip strikethrough markers
     if (done) {
