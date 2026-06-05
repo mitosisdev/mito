@@ -74,3 +74,23 @@ test("lastChange ignores closed PRs", () => {
   const s = computeStats(state, now, base);
   expect(s.lastChange).toBe("merged one");
 });
+
+test("cyclesRun reads buildSessions[], not legacy cycles[] CycleRecords", () => {
+  // cycles[] is the old CycleRecord array (addCycle() appends to it).
+  // buildSessions[] is the newer per-session tracker (startBuildSession() appends).
+  // cyclesRun must reflect buildSessions only — cycles[] must not inflate the count.
+  const state: State = {
+    ...emptyState(),
+    cycles: [
+      { id: 1, timestamp: "t", action: "propose", branch: "mito/1", testsPassed: true, committed: true, posted: false },
+      { id: 2, timestamp: "t", action: "propose", branch: "mito/2", testsPassed: true, committed: true, posted: true, postUrl: "u" },
+      { id: 3, timestamp: "t", action: "propose", branch: "mito/3", testsPassed: false, committed: false, posted: false },
+    ],
+    buildSessions: [
+      { id: "2026-06-05T01:00:00.000Z", startedAt: "2026-06-05T01:00:00.000Z", prsOpened: 1 },
+    ],
+  };
+  const s = computeStats(state, now, base);
+  // 3 CycleRecords must not show up — only the 1 BuildSession counts
+  expect(s.cyclesRun).toBe(1);
+});
