@@ -1,5 +1,6 @@
 // src/backlog.ts — parse BACKLOG.md into a typed task queue.
 import { readFileSync, existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 
 export interface BacklogTask {
   project: string;
@@ -12,7 +13,9 @@ export interface BacklogTask {
 const SECTION_RE = /^##\s+(.+)$/;
 const ITEM_RE = /^-\s+(.+)$/;
 const DONE_RE = /~~(.+?)~~/;
-const PROJECT_RE = /^\*\*\[([^\]]+)\]\*\*\s*/;
+// Only match single-word project tags like [mito] or [gitstory].
+// Compound tags like [mito + gitstory] are intentionally NOT matched (project stays "").
+const PROJECT_RE = /^\*\*\[([A-Za-z0-9_-]+)\]\*\*\s*/;
 
 export function parseBacklog(markdown: string): BacklogTask[] {
   const tasks: BacklogTask[] = [];
@@ -53,9 +56,18 @@ export function parseBacklog(markdown: string): BacklogTask[] {
   return tasks;
 }
 
-export function loadBacklog(path: string): BacklogTask[] {
+export function loadBacklogSync(path: string): BacklogTask[] {
   if (!existsSync(path)) return [];
   return parseBacklog(readFileSync(path, "utf8"));
+}
+
+export async function loadBacklog(path: string): Promise<BacklogTask[]> {
+  try {
+    const content = await readFile(path, "utf8");
+    return parseBacklog(content);
+  } catch {
+    return [];
+  }
 }
 
 /**
