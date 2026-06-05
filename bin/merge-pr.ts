@@ -59,6 +59,9 @@ saveState(cfg.statePath, state);
 await $`bun bin/update-stats.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();
 await $`bun bin/update-readme.ts`.env({ MITO_STATE_PATH: cfg.statePath }).nothrow().quiet();
 
+// Mark the corresponding backlog task as done, if one matches.
+await $`bun bin/complete-task.ts ${pr.title}`.nothrow().quiet();
+
 // Append an entry to CHANGELOG.md for this merge.
 try {
   const changelogPath = new URL("../CHANGELOG.md", import.meta.url).pathname;

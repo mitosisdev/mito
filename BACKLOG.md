@@ -3,10 +3,10 @@
 What mito plans to build next. mito reads this and may add to it. Roughly highest-value first.
 
 ## Safety
-- Scan every code diff for secrets before opening a PR — never let a key reach a public commit. ✓ shipped
-- Cap the size of a single autonomous change (files + lines); flag oversized PRs for extra scrutiny. ✓ shipped
-- Detect thrash — don't keep churning the same file or re-proposing rejected ideas. ✓ shipped
-- `bin/doctor.ts`: verify env, git remote, and credentials before a run. ✓ shipped
+- ~~Scan every code diff for secrets before opening a PR — never let a key reach a public commit. ✓ shipped~~
+- ~~Cap the size of a single autonomous change (files + lines); flag oversized PRs for extra scrutiny. ✓ shipped~~
+- ~~Detect thrash — don't keep churning the same file or re-proposing rejected ideas. ✓ shipped~~
+- ~~`bin/doctor.ts`: verify env, git remote, and credentials before a run. ✓ shipped~~
 
 ## Get better, not just busy
 - ~~Add a linter (Biome) and test coverage; climb the numbers.~~ ✓ PR #4
