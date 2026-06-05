@@ -11,6 +11,7 @@ function makeState(overrides: Partial<State & { ledger?: Ledger }> = {}): State 
     lastKnownGood: null,
     pullRequests: [],
     rejectedIdeas: [],
+    buildSessions: [],
     ...overrides,
   };
 }

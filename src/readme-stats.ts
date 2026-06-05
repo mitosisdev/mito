@@ -6,7 +6,7 @@ export const STATS_START = "<!-- stats-start -->";
 export const STATS_END = "<!-- stats-end -->";
 
 export function formatReadmeStats(state: State): string {
-  const cyclesRun = state.cycles.length;
+  const cyclesRun = state.buildSessions.length;
   const merged = state.pullRequests.filter((pr) => pr.status === "merged");
   const prsMerged = merged.length;
 

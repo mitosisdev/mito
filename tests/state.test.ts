@@ -3,7 +3,7 @@ import { test, expect } from "bun:test";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { rmSync } from "node:fs";
-import { loadState, saveState, addCycle, emptyState, recordProposedPr, markPrMerged, markPrClosed, addRejectedIdea, wasRejected } from "../src/state";
+import { loadState, saveState, addCycle, emptyState, recordProposedPr, markPrMerged, markPrClosed, addRejectedIdea, wasRejected, startBuildSession } from "../src/state";
 
 function tmpPath() { return join(tmpdir(), `mito-state-${Math.floor(performance.now())}-${process.pid}.json`); }
 
@@ -71,6 +71,55 @@ test("rejectedIdeas round-trips through saveState/loadState", () => {
   const loaded = loadState(p);
   expect(loaded.rejectedIdeas).toHaveLength(1);
   expect(loaded.rejectedIdeas[0]?.title).toBe("bad idea");
+  rmSync(p, { force: true });
+});
+
+test("emptyState includes buildSessions as empty array", () => {
+  const s = emptyState();
+  expect(Array.isArray(s.buildSessions)).toBe(true);
+  expect(s.buildSessions).toHaveLength(0);
+});
+
+test("startBuildSession appends a BuildSession with correct fields", () => {
+  const s = emptyState();
+  const ts = "2026-06-05T01:00:00.000Z";
+  const s2 = startBuildSession(s, ts);
+  expect(s2.buildSessions).toHaveLength(1);
+  const session = s2.buildSessions[0]!;
+  expect(session.id).toBe(ts);
+  expect(session.startedAt).toBe(ts);
+  expect(session.prsOpened).toBe(0);
+});
+
+test("startBuildSession appends without mutating original", () => {
+  const s = emptyState();
+  const ts1 = "2026-06-05T01:00:00.000Z";
+  const ts2 = "2026-06-05T02:00:00.000Z";
+  const s2 = startBuildSession(s, ts1);
+  const s3 = startBuildSession(s2, ts2);
+  expect(s.buildSessions).toHaveLength(0);
+  expect(s2.buildSessions).toHaveLength(1);
+  expect(s3.buildSessions).toHaveLength(2);
+});
+
+test("loadState backfills buildSessions for older state files", () => {
+  const p = tmpPath();
+  // biome-ignore lint/suspicious/noExplicitAny: simulates pre-buildSessions state file
+  saveState(p, { cycles: [], backlog: [], lastKnownGood: null, pullRequests: [], rejectedIdeas: [] } as any);
+  const loaded = loadState(p);
+  expect(Array.isArray(loaded.buildSessions)).toBe(true);
+  expect(loaded.buildSessions).toHaveLength(0);
+  rmSync(p, { force: true });
+});
+
+test("buildSessions round-trips through saveState/loadState", () => {
+  const p = tmpPath();
+  let s = emptyState();
+  s = startBuildSession(s, "2026-06-05T01:00:00.000Z");
+  saveState(p, s);
+  const loaded = loadState(p);
+  expect(loaded.buildSessions).toHaveLength(1);
+  expect(loaded.buildSessions[0]?.id).toBe("2026-06-05T01:00:00.000Z");
   rmSync(p, { force: true });
 });
 

@@ -19,6 +19,12 @@ export interface RejectedIdea {
   closedAt: string;
 }
 
+export interface BuildSession {
+  id: string;        // ISO timestamp slug, e.g. "2026-06-05T01:00:00.000Z"
+  startedAt: string; // ISO timestamp
+  prsOpened: number; // how many PRs this session opened (default 0 on start)
+}
+
 export interface PullRequestRecord {
   number: number;
   branch: string;
@@ -38,15 +44,16 @@ export interface State {
   lastKnownGood: string | null;
   pullRequests: PullRequestRecord[];
   rejectedIdeas: RejectedIdea[];
+  buildSessions: BuildSession[];
 }
 
-export function emptyState(): State { return { cycles: [], backlog: [], lastKnownGood: null, pullRequests: [], rejectedIdeas: [] }; }
+export function emptyState(): State { return { cycles: [], backlog: [], lastKnownGood: null, pullRequests: [], rejectedIdeas: [], buildSessions: [] }; }
 
 export function loadState(path: string): State {
   if (!existsSync(path)) return emptyState();
   const raw = JSON.parse(readFileSync(path, "utf8")) as Partial<State>;
   // Backfill fields older state files predate, so callers always get arrays.
-  return { ...emptyState(), ...raw, pullRequests: raw.pullRequests ?? [], rejectedIdeas: raw.rejectedIdeas ?? [] };
+  return { ...emptyState(), ...raw, pullRequests: raw.pullRequests ?? [], rejectedIdeas: raw.rejectedIdeas ?? [], buildSessions: raw.buildSessions ?? [] };
 }
 
 export function saveState(path: string, state: State): void {
@@ -57,6 +64,11 @@ export function addCycle(state: State, c: Omit<CycleRecord, "id" | "timestamp">)
   const id = (state.cycles.at(-1)?.id ?? 0) + 1;
   const record: CycleRecord = { id, timestamp: new Date().toISOString(), ...c };
   return { ...state, cycles: [...state.cycles, record] };
+}
+
+export function startBuildSession(state: State, startedAt: string): State {
+  const session: BuildSession = { id: startedAt, startedAt, prsOpened: 0 };
+  return { ...state, buildSessions: [...state.buildSessions, session] };
 }
 
 export function setLastKnownGood(state: State, commit: string): State {

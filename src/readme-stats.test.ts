@@ -3,7 +3,7 @@ import { formatReadmeStats, injectStats, STATS_START, STATS_END } from "./readme
 import type { State } from "./state";
 
 function emptyState(): State {
-  return { cycles: [], backlog: [], lastKnownGood: null, pullRequests: [] };
+  return { cycles: [], backlog: [], lastKnownGood: null, pullRequests: [], rejectedIdeas: [], buildSessions: [] };
 }
 
 test("zero state produces zero counts", () => {
@@ -14,9 +14,9 @@ test("zero state produces zero counts", () => {
 test("counts cycles correctly", () => {
   const state: State = {
     ...emptyState(),
-    cycles: [
-      { id: 1, timestamp: "2025-01-01T00:00:00Z", action: "build", branch: "mito/1", testsPassed: true, committed: true, posted: false },
-      { id: 2, timestamp: "2025-01-02T00:00:00Z", action: "build", branch: "mito/2", testsPassed: true, committed: true, posted: false },
+    buildSessions: [
+      { id: "2025-01-01T00:00:00.000Z", startedAt: "2025-01-01T00:00:00.000Z", prsOpened: 0 },
+      { id: "2025-01-02T00:00:00.000Z", startedAt: "2025-01-02T00:00:00.000Z", prsOpened: 0 },
     ],
   };
   const result = formatReadmeStats(state);
