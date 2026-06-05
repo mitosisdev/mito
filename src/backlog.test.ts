@@ -114,3 +114,49 @@ test("loadBacklog returns empty array for missing file", async () => {
   const tasks = await loadBacklog("/tmp/this-file-does-not-exist-mito-backlog.md");
   expect(tasks).toEqual([]);
 });
+
+// --- Inline completion marker tests ---
+
+test("'text ✓ shipped' inline marker sets done:true", () => {
+  const md = `
+## Shipped
+- Scan every code diff for secrets before opening a PR — never let a key reach a public commit. ✓ shipped
+`.trim();
+  const tasks = parseBacklog(md);
+  expect(tasks.length).toBe(1);
+  expect(tasks[0].done).toBe(true);
+  expect(tasks[0].text).toBe(
+    "Scan every code diff for secrets before opening a PR — never let a key reach a public commit."
+  );
+});
+
+test("'text ✓ PR #N' inline marker sets done:true", () => {
+  const md = `
+## Shipped
+- Add secret scanning ✓ PR #42
+`.trim();
+  const tasks = parseBacklog(md);
+  expect(tasks.length).toBe(1);
+  expect(tasks[0].done).toBe(true);
+  expect(tasks[0].text).toBe("Add secret scanning");
+});
+
+test("'~~text~~ ✓ PR #N' strikethrough + PR reference sets done:true", () => {
+  const md = `
+## Shipped
+- ~~Add a linter (Biome) and test coverage.~~ ✓ PR #7
+`.trim();
+  const tasks = parseBacklog(md);
+  expect(tasks.length).toBe(1);
+  expect(tasks[0].done).toBe(true);
+  expect(tasks[0].text).toContain("Add a linter (Biome)");
+});
+
+test("plain task without ✓ marker stays done:false", () => {
+  const md = `
+## Pending
+- Build something cool
+`.trim();
+  const tasks = parseBacklog(md);
+  expect(tasks[0].done).toBe(false);
+});
