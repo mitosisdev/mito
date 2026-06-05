@@ -25,9 +25,9 @@ test("daysAlive is 0 when now === repoCreated", () => {
 test("cyclesRun counts build sessions, not PRs; prsMerged counts only merged PRs", () => {
   const state: State = {
     ...emptyState(),
-    cycles: [
-      { id: 1, timestamp: "t", action: "built feature A", branch: "mito/1", testsPassed: true, committed: true, posted: false },
-      { id: 2, timestamp: "t", action: "built feature B", branch: "mito/2", testsPassed: true, committed: true, posted: false },
+    buildSessions: [
+      { id: "2026-06-05T01:00:00.000Z", startedAt: "2026-06-05T01:00:00.000Z", prsOpened: 0 },
+      { id: "2026-06-05T02:00:00.000Z", startedAt: "2026-06-05T02:00:00.000Z", prsOpened: 1 },
     ],
     pullRequests: [
       { number: 1, branch: "mito/1", url: "u", title: "first", status: "merged", proposedAt: "t", resolvedAt: "2026-06-02T10:00:00Z", mergeSha: "abc" },
