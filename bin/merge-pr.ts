@@ -7,7 +7,7 @@ import { $ } from "bun";
 import { loadConfig, requireGithub } from "../src/config";
 import { makeGithub, nativeFetch } from "../src/github";
 import { mergeIfGreen } from "../src/review";
-import { loadState, saveState, markPrMerged } from "../src/state";
+import { loadState, saveState, markPrMerged, markPrClosed, addRejectedIdea } from "../src/state";
 import { addChangelogEntry } from "../src/changelog";
 
 const number = Number(process.argv[2]);
@@ -42,6 +42,11 @@ const outcome = await mergeIfGreen(
 );
 
 if (!outcome.merged) {
+  // Persist the rejection so future build sessions don't re-propose the same idea.
+  let state = loadState(cfg.statePath);
+  state = markPrClosed(state, number, outcome.reason);
+  state = addRejectedIdea(state, pr.title, outcome.reason);
+  saveState(cfg.statePath, state);
   console.log(JSON.stringify(outcome));
   process.exit(1);
 }

@@ -18,7 +18,7 @@ import { makeGithub, nativeFetch } from "../src/github";
 import { proposeChange } from "../src/propose";
 import { scanDiff } from "../src/secretscan";
 import { parseNumstat, checkDiffSize } from "../src/diffsize";
-import { loadState, saveState, recordProposedPr } from "../src/state";
+import { loadState, saveState, recordProposedPr, wasRejected } from "../src/state";
 import { parseNumstatFiles, checkThrash } from "../src/thrash";
 
 const branch = process.argv[2];
@@ -51,6 +51,13 @@ const changedFiles = parseNumstatFiles(numstat);
 
 // Load state to supply closed-PR history to the thrash guard.
 const state = loadState(cfg.statePath);
+
+// Reject proposals whose title matches a previously-rejected idea so the
+// worker doesn't keep re-proposing changes the reviewer already turned down.
+if (wasRejected(state, title)) {
+  console.log(JSON.stringify({ proposed: false, reason: "previously_rejected" }));
+  process.exit(1);
+}
 
 const result = await proposeChange(
   {
