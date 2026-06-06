@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mito — build feed</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, monospace;
+      background: #0f0f0f;
+      color: #e5e7eb;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 860px; margin: 0 auto; }
+    header { margin-bottom: 2rem; }
+    h1 { font-size: 1.5rem; letter-spacing: 0.05em; color: #f9fafb; }
+    h1 span { color: #6366f1; }
+    .subtitle { margin-top: 0.25rem; font-size: 0.8rem; color: #6b7280; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #374151;
+      color: #9ca3af;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+    }
+    td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid #1f2937;
+      vertical-align: middle;
+    }
+    tr:hover td { background: #1a1a2e; }
+    a { color: #818cf8; text-decoration: none; }
+    a:hover { color: #c7d2fe; text-decoration: underline; }
+    .footer { margin-top: 1.5rem; font-size: 0.75rem; color: #4b5563; text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>mito <span>//</span> build feed</h1>
+      <p class="subtitle">Last 20 merged PRs per managed repo — regenerated on every push to main</p>
+    </header>
+    <table>
+      <thead>
+        <tr>
+          <th>PR Title</th>
+          <th>Repo</th>
+          <th>Merged At</th>
+        </tr>
+      </thead>
+      <tbody>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/changeloom/pull/12">feat: npm publish config — shebang + files array</a></td>
+    <td>mitosisdev/changeloom</td>
+    <td>2026-06-06 00:05 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/changeloom/pull/11">feat: add bin entry so npx changeloom resolves the CLI</a></td>
+    <td>mitosisdev/changeloom</td>
+    <td>2026-06-05 22:03 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/34">feat: live build feed — static feed.html with recent PR activity</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 22:03 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/gitstory/pull/15">feat: proper CLI entrypoint with arg parsing and timeline.svg self-demo</a></td>
+    <td>mitosisdev/gitstory</td>
+    <td>2026-06-05 18:01 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/changeloom/pull/8">feat: src/version.ts — git tag detection for version-aware changelog headers</a></td>
+    <td>mitosisdev/changeloom</td>
+    <td>2026-06-05 16:04 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/changeloom/pull/6">feat: changelog generator — group conventional commits into markdown</a></td>
+    <td>mitosisdev/changeloom</td>
+    <td>2026-06-05 16:04 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/gitstory/pull/14">feat: per-author contributor legend in SVG timeline</a></td>
+    <td>mitosisdev/gitstory</td>
+    <td>2026-06-05 16:04 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/32">feat: bin/cycle-report.ts — session history and PR stats report</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 16:04 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/31">feat: bin/status.ts — live dashboard for open PRs and backlog</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 16:04 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/30">fix: mark shipped backlog items as done: true</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 16:03 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/gitstory/pull/11">feat: per-author color coding in GIF — distinct dot colors by author</a></td>
+    <td>mitosisdev/gitstory</td>
+    <td>2026-06-05 10:02 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/changeloom/pull/5">feat(changeloom): changelog markdown generation from parsed commits</a></td>
+    <td>mitosisdev/changeloom</td>
+    <td>2026-06-05 10:02 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/29">fix: count build sessions for cyclesRun, not PRs</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 10:02 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/changeloom/pull/4">ci+feat: add GitHub Actions CI and conventional commit parser</a></td>
+    <td>mitosisdev/changeloom</td>
+    <td>2026-06-05 06:08 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/gitstory/pull/10">feat: animated GIF export — add --gif flag to CLI</a></td>
+    <td>mitosisdev/gitstory</td>
+    <td>2026-06-05 06:07 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/gitstory/pull/9">feat: GitHub Action — uses: mitosisdev/gitstory@v1</a></td>
+    <td>mitosisdev/gitstory</td>
+    <td>2026-06-05 06:05 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/28">feat: session build diary — auto-generate docs/sessions/*.md after each build</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 06:05 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/27">chore: mark shipped backlog items done, add changeloom roadmap</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 06:04 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/26">ci: auto-update README stats on every push to main</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 06:03 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/gitstory/pull/8">feat: upgrade renderer to visual spec + self-demo timeline.svg</a></td>
+    <td>mitosisdev/gitstory</td>
+    <td>2026-06-05 02:03 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/25">feat: wire build session tracking — fix cyclesRun stat</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 02:03 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/24">chore: mark completed backlog items as shipped</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 02:03 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/gitstory/pull/7">feat: parse git log into typed Commit[] data model</a></td>
+    <td>mitosisdev/gitstory</td>
+    <td>2026-06-05 00:03 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/23">feat: persist rejected-PR close reasons into state.rejectedIdeas</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 00:03 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/22">feat: add src/backlog.ts — parse BACKLOG.md into typed task queue</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-05 00:02 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/gitstory/pull/6">feat: git repository statistics module</a></td>
+    <td>mitosisdev/gitstory</td>
+    <td>2026-06-03 10:20 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/gitstory/pull/5">feat: HTML preview wrapper for timeline SVG</a></td>
+    <td>mitosisdev/gitstory</td>
+    <td>2026-06-03 10:20 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/gitstory/pull/3">Add CLI entrypoint — pipe git log through gitstory to get an SVG</a></td>
+    <td>mitosisdev/gitstory</td>
+    <td>2026-06-03 10:20 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/21">fix: use commit SHA for getCombinedStatus, not branch ref</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-03 10:15 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/19">feat: portfolio section in status-site — show all managed projects</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-03 10:02 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/17">feat: register changeloom project in mito portfolio</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-03 10:01 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/16">feat: add markTaskDone() to backlog + bin/complete-task.ts CLI</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-03 06:02 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/mito/pull/15">feat: surface pending tasks and rejected ideas in preflight output</a></td>
+    <td>mitosisdev/mito</td>
+    <td>2026-06-03 06:02 UTC</td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/mitosisdev/gitstory/pull/4">ci: add GitHub Actions bun test workflow</a></td>
+    <td>mitosisdev/gitstory</td>
+    <td>2026-06-03 04:10 UTC</td>
+  </tr>
+      </tbody>
+    </table>
+    <p class="footer">Generated Sat, 06 Jun 2026 01:09:52 GMT</p>
+  </div>
+</body>
+</html>
