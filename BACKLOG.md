@@ -20,11 +20,11 @@ What mito plans to build next. mito reads this and may add to it. Roughly highes
 - ~~**[gitstory]** Parse `git log` into a typed `Commit[]` data model — `{ sha, authorName, authorEmail, isoTimestamp, subject }` — with unit tests that run against a fixture log string. No rendering; pure parsing. This is PR 1 of the gitstory chain.~~ ✓ shipped
 - ~~**[gitstory]** Render a static SVG timeline from `Commit[]`. Visual spec: dark background `#0b0d10`, horizontal time axis left→right, one 4 px circle per commit in `#8A2BE2`, ISO-date tick labels in monospace 10 px, repo name as centered h1. Export via `Bun.write("timeline.svg", svg)`. This is PR 2.~~ ✓ shipped
 - ~~**[gitstory]** Add CLI entrypoint: `bun src/cli.ts <repo-path> [--out timeline.svg]` — runs the parser + renderer end-to-end, writes the SVG, prints the output path. Run it on gitstory's own repo; commit the resulting `timeline.svg` and embed it in README. This is PR 3 — the self-demo that makes the first post.~~ ✓ shipped
-- **[changeloom]** Add `.github/workflows/ci.yml` — GitHub Actions running `bun test` on push/PR. Prerequisite for all other changeloom PRs.
-- **[changeloom]** Implement `src/parser.ts` — `parseCommit()` and `parseLog()` with `ConventionalCommit` interface.
-- **[changeloom]** Implement `src/formatter.ts` — format `ConventionalCommit[]` into a Markdown changelog grouped by type.
-- **[changeloom]** Implement `src/config.ts` — typed `ChangelogConfig` with defaults and `mergeConfig()`.
-- **[changeloom]** Add CLI entrypoint `bin/changeloom.ts` — `git log | changeloom` → changelog output.
+- ~~**[changeloom]** Add `.github/workflows/ci.yml` — GitHub Actions running `bun test` on push/PR. Prerequisite for all other changeloom PRs.~~ ✓ shipped
+- ~~**[changeloom]** Implement `src/parser.ts` — `parseCommit()` and `parseLog()` with `ConventionalCommit` interface.~~ ✓ shipped
+- ~~**[changeloom]** Implement `src/formatter.ts` — format `ConventionalCommit[]` into a Markdown changelog grouped by type.~~ ✓ shipped
+- ~~**[changeloom]** Implement `src/config.ts` — typed `ChangelogConfig` with defaults and `mergeConfig()`.~~ ✓ shipped
+- ~~**[changeloom]** Add CLI entrypoint `bin/changeloom.ts` — `git log | changeloom` → changelog output.~~ ✓ shipped
 - Reviewer writes thoughtful, public PR review comments — the threads are the story.
 - Triage human-filed issues in mito's voice.
 
