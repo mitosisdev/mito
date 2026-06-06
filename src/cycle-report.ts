@@ -110,6 +110,12 @@ function fmtDate(iso: string): string {
   }
 }
 
+// Machine-readable JSON output — pass the CycleReportData directly through
+// so callers can pipe into jq or other tools.
+export function formatCycleReportJson(data: CycleReportData): string {
+  return JSON.stringify(data, null, 2) + "\n";
+}
+
 export function formatCycleReport(data: CycleReportData): string {
   const lines: string[] = [];
 

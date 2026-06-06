@@ -2,7 +2,7 @@
 // All fixture data; no file I/O.
 import { test, expect } from "bun:test";
 import type { State } from "./state";
-import { buildCycleReport, formatCycleReport } from "./cycle-report";
+import { buildCycleReport, formatCycleReport, formatCycleReportJson } from "./cycle-report";
 
 function emptyState(): State {
   return {
@@ -282,4 +282,43 @@ test("formatCycleReport lists rejected ideas under session", () => {
 test("formatCycleReport empty state message", () => {
   const output = formatCycleReport(buildCycleReport(emptyState()));
   expect(output).toContain("No build sessions recorded yet");
+});
+
+// ---------------------------------------------------------------------------
+// formatCycleReportJson — machine-readable output
+// ---------------------------------------------------------------------------
+
+test("formatCycleReportJson returns valid JSON", () => {
+  const data = buildCycleReport(emptyState());
+  const raw = formatCycleReportJson(data);
+  const parsed = JSON.parse(raw);
+  expect(parsed).toHaveProperty("totalSessions");
+  expect(parsed).toHaveProperty("sessions");
+  expect(parsed).toHaveProperty("totalPrsMerged");
+  expect(parsed).toHaveProperty("totalPrsClosed");
+  expect(parsed).toHaveProperty("totalPrsOpened");
+  expect(parsed).toHaveProperty("successRate");
+});
+
+test("formatCycleReportJson preserves all session rows", () => {
+  const state: State = {
+    ...emptyState(),
+    buildSessions: [
+      { id: "2026-01-01T00:00:00.000Z", startedAt: "2026-01-01T00:00:00.000Z", prsOpened: 1 },
+      { id: "2026-01-02T00:00:00.000Z", startedAt: "2026-01-02T00:00:00.000Z", prsOpened: 0 },
+    ],
+    pullRequests: [
+      { number: 1, branch: "mito/a", url: "u", title: "feat: A", status: "merged", proposedAt: "2026-01-01T01:00:00.000Z", resolvedAt: "2026-01-01T10:00:00.000Z" },
+    ],
+  };
+  const data = buildCycleReport(state);
+  const parsed = JSON.parse(formatCycleReportJson(data));
+  expect(parsed.sessions).toHaveLength(2);
+  expect(parsed.totalPrsMerged).toBe(1);
+  expect(parsed.totalSessions).toBe(2);
+});
+
+test("formatCycleReportJson ends with newline", () => {
+  const raw = formatCycleReportJson(buildCycleReport(emptyState()));
+  expect(raw.endsWith("\n")).toBe(true);
 });
