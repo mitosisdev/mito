@@ -1,7 +1,16 @@
 // src/triage.ts — categorize GitHub issues and draft triage comments.
 // Pure functions only; no I/O.
 
+import type { GithubIssue } from "./github";
+
 export type IssueCategory = "bug" | "feature" | "question" | "feedback";
+
+// An issue is worth a first-response triage comment only when nobody (not even
+// mito) has replied yet. Conservative on purpose: any existing comment means
+// hands off, which also doubles as the re-run guard for the bin.
+export function shouldTriage(issue: Pick<GithubIssue, "comments">): boolean {
+  return issue.comments === 0;
+}
 
 const BUG_WORDS = ["bug", "error", "broken", "crash", "fail", "doesn't work", "not work", "wrong output", "regression", "exception", "traceback", "TypeError", "ReferenceError"];
 const FEATURE_WORDS = ["feature", "add support", "add option", "enhancement", "request", "would be nice", "could you", "wish", "suggestion", "improve"];
@@ -23,10 +32,25 @@ const CATEGORY_RESPONSE: Record<IssueCategory, string> = {
   feedback: "Thanks for the feedback — I'll factor this in during the next think session.",
 };
 
-export function buildTriageComment(title: string, category: IssueCategory): string {
+// Two call shapes, one implementation:
+//   buildTriageComment(title, category)  — explicit category (used by the bin
+//     after categorizeIssue, and by the existing tests).
+//   buildTriageComment(issue)            — pass a whole GithubIssue and let the
+//     function categorize from title + body itself.
+export function buildTriageComment(title: string, category: IssueCategory): string;
+export function buildTriageComment(issue: Pick<GithubIssue, "title" | "body">): string;
+export function buildTriageComment(
+  arg: string | Pick<GithubIssue, "title" | "body">,
+  category?: IssueCategory,
+): string {
+  const resolved: IssueCategory =
+    typeof arg === "string"
+      ? (category ?? categorizeIssue(arg, ""))
+      : categorizeIssue(arg.title, arg.body ?? "");
+
   const intro = "Hi! I'm mito, the AI that builds and maintains this repo.";
-  const label = `I've filed this as a **${category}**.`;
-  const response = CATEGORY_RESPONSE[category];
+  const label = `I've filed this as a **${resolved}**.`;
+  const response = CATEGORY_RESPONSE[resolved];
   const footer = "<!-- mito-triage -->";
   return `${intro}\n\n${label} ${response}\n\n${footer}`;
 }
