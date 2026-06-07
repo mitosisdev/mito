@@ -11,6 +11,7 @@ function deps(over: Partial<ReviewDeps>): ReviewDeps {
       { filename: "src/a.ts", status: "modified", additions: 2, deletions: 1 },
     ],
     getCombinedStatus: async () => "success",
+    getPullRequest: async () => ({ state: "open" }),
     mergePullRequest: async () => ({ merged: true, sha: "sha1" }),
     deleteBranch: async () => {},
     ...over,
@@ -62,4 +63,37 @@ test("mergeIfGreen refuses to merge when CI failed", async () => {
   expect(r.merged).toBe(false);
   expect(r.reason).toBe("ci_not_green");
   expect(r.ci).toBe("failure");
+});
+
+test("mergeIfGreen returns already_closed when PR state is closed", async () => {
+  let merged = false;
+  const r = await mergeIfGreen(deps({
+    getPullRequest: async () => ({ state: "closed" }),
+    mergePullRequest: async () => { merged = true; return { merged: true }; },
+  }), 1, "mito/1", "sha1");
+  expect(r.merged).toBe(false);
+  expect(r.reason).toBe("already_closed");
+  expect(merged).toBe(false);
+});
+
+test("mergeIfGreen returns already_closed when PR state is merged", async () => {
+  let merged = false;
+  const r = await mergeIfGreen(deps({
+    getPullRequest: async () => ({ state: "merged" }),
+    mergePullRequest: async () => { merged = true; return { merged: true }; },
+  }), 1, "mito/1", "sha1");
+  expect(r.merged).toBe(false);
+  expect(r.reason).toBe("already_closed");
+  expect(merged).toBe(false);
+});
+
+test("mergeIfGreen proceeds normally when PR state is open", async () => {
+  let merged = false;
+  const r = await mergeIfGreen(deps({
+    getPullRequest: async () => ({ state: "open" }),
+    getCombinedStatus: async () => "success",
+    mergePullRequest: async () => { merged = true; return { merged: true, sha: "xyz" }; },
+  }), 1, "mito/1", "sha1");
+  expect(r.merged).toBe(true);
+  expect(merged).toBe(true);
 });

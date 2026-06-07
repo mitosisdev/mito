@@ -36,6 +36,7 @@ export interface Github {
   openPullRequest(input: OpenPrInput): Promise<OpenPrResult>;
   listOpenPullRequests(): Promise<OpenPr[]>;
   countOpenPullRequests(): Promise<number>;
+  getPullRequest(number: number): Promise<{ state: string }>;
   getPullRequestFiles(number: number): Promise<PrFile[]>;
   getCombinedStatus(ref: string): Promise<CiStatus>;
   mergePullRequest(number: number, opts?: { method?: "squash" | "merge" | "rebase" }): Promise<MergeResult>;
@@ -104,6 +105,11 @@ export function makeGithub({ repo, token, fetch }: MakeGithubOpts): Github {
 
     async countOpenPullRequests() {
       return (await this.listOpenPullRequests()).length;
+    },
+
+    async getPullRequest(number) {
+      const j = (await call("GET", `${base}/pulls/${number}`)) as { state: string };
+      return { state: j.state };
     },
 
     async getPullRequestFiles(number) {

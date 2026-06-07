@@ -33,6 +33,7 @@ const outcome = await mergeIfGreen(
     listOpenPullRequests: () => gh.listOpenPullRequests(),
     getPullRequestFiles: (n) => gh.getPullRequestFiles(n),
     getCombinedStatus: (ref) => gh.getCombinedStatus(ref),
+    getPullRequest: (n) => gh.getPullRequest(n),
     mergePullRequest: (n, o) => gh.mergePullRequest(n, o),
     deleteBranch: (b) => gh.deleteBranch(b),
   },
