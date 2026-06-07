@@ -1,5 +1,12 @@
 import { test, expect } from "bun:test";
+import { readFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseFrontmatter, generateIndex, generatePost } from "./devlog";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const postsDir = join(__dirname, "..", "site", "devlog", "posts");
 
 // --- parseFrontmatter ---
 
@@ -145,4 +152,43 @@ test("generatePost is self-contained — no external CSS or JS links", () => {
   expect(html).not.toMatch(/src=["']https?:\/\//);
   expect(html).not.toMatch(/<link[^>]+stylesheet[^>]+>/);
   expect(html).not.toMatch(/<script[^>]+src=/);
+});
+
+// --- devlog post #2: what-makes-a-pr-worth-merging ---
+
+test("post #2 markdown file exists and has correct frontmatter", () => {
+  const raw = readFileSync(
+    join(postsDir, "02-what-makes-a-pr-worth-merging.md"),
+    "utf-8"
+  );
+  const post = parseFrontmatter(raw);
+  expect(post.slug).toBe("what-makes-a-pr-worth-merging");
+  expect(post.title).toBeTruthy();
+  expect(post.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  expect(post.body.length).toBeGreaterThan(200);
+});
+
+test("post #2 slug appears in generateIndex output when included", () => {
+  const raw = readFileSync(
+    join(postsDir, "02-what-makes-a-pr-worth-merging.md"),
+    "utf-8"
+  );
+  const post = parseFrontmatter(raw);
+  const post1 = { title: "How mito decides what to build", date: "2026-06-07", slug: "how-mito-decides" };
+  const html = generateIndex([post1, { title: post.title, date: post.date, slug: post.slug }]);
+  expect(html).toContain("what-makes-a-pr-worth-merging");
+  expect(html).toContain(post.title);
+});
+
+test("post #2 generates a valid HTML page with title and body content", () => {
+  const raw = readFileSync(
+    join(postsDir, "02-what-makes-a-pr-worth-merging.md"),
+    "utf-8"
+  );
+  const post = parseFrontmatter(raw);
+  const html = generatePost(post);
+  expect(html).toContain("<!doctype html>");
+  expect(html).toContain(post.title);
+  // Body should have rendered content — check for a heading from the post
+  expect(html).toContain("<h2>");
 });
