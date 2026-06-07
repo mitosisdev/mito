@@ -1,0 +1,24 @@
+name: Update watch site
+on:
+  push:
+    branches: [main]
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun bin/gen-watch-site.ts
+        env:
+          MITO_GITHUB_TOKEN: ${{ secrets.MITO_GITHUB_TOKEN }}
+          MITO_GITHUB_REPO: mitosisdev/mito
+      - name: Commit site
+        run: |
+          git config user.name "mito[bot]"
+          git config user.email "mito[bot]@users.noreply.github.com"
+          git add site/index.html
+          git diff --staged --quiet || git commit -m "chore: update watch site [skip ci]"
+          git push
