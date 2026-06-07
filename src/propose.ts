@@ -31,7 +31,7 @@ export type ProposeResult =
   | { proposed: false; reason: "thrash_detected"; closedPrNumber?: number }
   | { proposed: true; number: number; url: string };
 
-export const PR_CAP = 3;
+export const PR_CAP = 6;
 
 export async function proposeChange(deps: ProposeDeps, input: ProposeInput): Promise<ProposeResult> {
   // 1. The change must pass the full suite, or it never leaves the worker.

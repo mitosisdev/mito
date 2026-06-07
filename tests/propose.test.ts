@@ -3,7 +3,7 @@
 // All side effects are injected (tests, cap count, branch push, PR open) so
 // the cap / tests-failed / propose branches are exercised with no network/git.
 import { test, expect } from "bun:test";
-import { proposeChange, type ProposeDeps } from "../src/propose";
+import { proposeChange, type ProposeDeps, PR_CAP } from "../src/propose";
 
 function deps(over: Partial<ProposeDeps>): ProposeDeps {
   return {
@@ -37,11 +37,11 @@ test("tests failing -> no PR, branch discarded, reason tests_failed", async () =
   expect(opened).toBe(false);
 });
 
-test("at the 3-PR cap -> no PR opened, reason pr_cap", async () => {
+test("at the PR cap -> no PR opened, reason pr_cap", async () => {
   let pushed = false;
   let opened = false;
   const r = await proposeChange(deps({
-    countOpenPullRequests: async () => 3,
+    countOpenPullRequests: async () => PR_CAP,
     pushBranch: async () => { pushed = true; },
     openPullRequest: async () => { opened = true; return { number: 0, url: "" }; },
   }), input);
@@ -51,7 +51,7 @@ test("at the 3-PR cap -> no PR opened, reason pr_cap", async () => {
 });
 
 test("above the cap (defensive >=) -> still pr_cap", async () => {
-  const r = await proposeChange(deps({ countOpenPullRequests: async () => 4 }), input);
+  const r = await proposeChange(deps({ countOpenPullRequests: async () => PR_CAP + 1 }), input);
   expect(r).toEqual({ proposed: false, reason: "pr_cap" });
 });
 
