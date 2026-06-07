@@ -25,6 +25,13 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Generate watch site
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MITO_GITHUB_REPO: mitosisdev/mito
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun bin/gen-watch-site.ts
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
