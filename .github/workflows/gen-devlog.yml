@@ -1,0 +1,24 @@
+name: Update devlog
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  update:
+    if: github.actor != 'mito[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - run: bun bin/gen-devlog.ts
+      - name: Commit devlog
+        run: |
+          git config user.name "mito[bot]"
+          git config user.email "mito[bot]@users.noreply.github.com"
+          git add site/devlog/
+          git diff --staged --quiet || git commit -m "chore: update devlog [skip ci]"
+          git push
