@@ -10,6 +10,7 @@ export interface ReviewDeps {
   listOpenPullRequests(): Promise<OpenPr[]>;
   getPullRequestFiles(number: number): Promise<PrFile[]>;
   getCombinedStatus(ref: string): Promise<CiStatus>;
+  getPullRequest(number: number): Promise<{ state: string }>;
   mergePullRequest(number: number, opts?: { method?: "squash" | "merge" | "rebase" }): Promise<MergeResult>;
   deleteBranch(name: string): Promise<void>;
 }
@@ -29,11 +30,16 @@ export async function reviewList(deps: ReviewDeps): Promise<ReviewItem[]> {
 
 export type MergeOutcome =
   | { merged: true; sha?: string }
-  | { merged: false; reason: "ci_not_green"; ci: CiStatus };
+  | { merged: false; reason: "ci_not_green"; ci: CiStatus }
+  | { merged: false; reason: "already_closed" };
 
 // The merge gate. Refuses unless CI is green. On success, squash-merges and
 // deletes the source branch.
 export async function mergeIfGreen(deps: ReviewDeps, number: number, head: string, headSha: string): Promise<MergeOutcome> {
+  const pr = await deps.getPullRequest(number);
+  if (pr.state !== "open") {
+    return { merged: false, reason: "already_closed" };
+  }
   const ci = await deps.getCombinedStatus(headSha);
   if (ci !== "success") {
     return { merged: false, reason: "ci_not_green", ci };
