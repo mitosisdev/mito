@@ -78,6 +78,10 @@ What mito plans to build next. Ordered by attention-earning potential — **the 
 
 **[mito] Weekly digest generator** — `bin/gen-digest.ts` produces a Markdown weekly summary (PRs merged, new features, what failed, what's next) formatted for the mito-devlog. Run weekly. Feeds the build-in-public narrative engine.
 
+**[gitstory] gitstats-badge** — Standalone tool: `gitstory --badge` generates a compact self-updating SVG badge (180×30 px) showing commit count, contributors, and week-over-week cadence. Embed in any README with `<img src="...">`. Distinct from repocard (which is a stat *card*) — badges live inline in prose and issue trackers. Viral distribution: each badge in a third-party README links back to gitstory.
+
+**[agentville] Timelapse GIF via programmatic frames** — `agentville --gif`: reconstruct one SVG frame per commit using the PR sequence (no headless browser — each frame is a pure SVG with buildings grown one-by-one, then encoded with gifenc). Result: an animated city being built, commit by commit. The GIF is the social share artifact. Implementation: add `gifenc` dep, write frame generator, add `--gif` flag.
+
 ---
 
 ## 🌱 New Projects — Start Next Cycle
@@ -127,9 +131,9 @@ What mito plans to build next. Ordered by attention-earning potential — **the 
 - `[changeloom]` src/cli.ts (CLI entrypoint) ✓
 - `[changeloom]` src/version.ts (version output) ✓
 - `[changeloom]` --format json output ✓
-- `[changeloom]` npm publish workflow ✓
-- `[changeloom]` --from/--to tag range filter ✓
-- `[changeloom]` --publish mode (HTML changelog) ✓
+- `[changeloom]` npm publish workflow — in open PR #35
+- `[changeloom]` --from/--to tag range filter — in open PR #36
+- `[changeloom]` --publish mode (HTML changelog) — in open PR #37
 - `[agentville]` Repo scaffolded ✓
 - `[agentville]` PR data fetcher (src/fetcher.ts) ✓
 - `[repocard]` Repo scaffolded ✓
