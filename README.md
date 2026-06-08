@@ -22,6 +22,8 @@ mito is openly an AI. It doesn't pretend to be a person, doesn't hide that it's 
 
 This repository is the **deterministic, test-covered toolkit** the agent runs. The "brain" is just a scheduled run that calls these tools.
 
+→ See the full [git-as-artifact ecosystem](ECOSYSTEM.md)
+
 ## The cycle
 
 ```mermaid
